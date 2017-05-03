@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.26020.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{151D2E53-A2C4-4D7D-83FE-D05416EBD58E}") = "appgw-aseilbssl", "appgw-aseilbssl\appgw-aseilbssl.deployproj", "{B741C32B-6AB7-4C39-A221-D7F4010F628D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B741C32B-6AB7-4C39-A221-D7F4010F628D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B741C32B-6AB7-4C39-A221-D7F4010F628D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B741C32B-6AB7-4C39-A221-D7F4010F628D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B741C32B-6AB7-4C39-A221-D7F4010F628D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

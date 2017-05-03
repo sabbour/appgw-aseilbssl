@@ -1,0 +1,337 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "appgwSkuName": {
+      "type": "string",
+      "allowedValues": [
+        "Standard_Small",
+        "Standard_Medium",
+        "Standard_Large"
+      ],
+      "defaultValue": "Standard_Medium",
+      "metadata": {
+        "description": "The SKU of the Application Gateway."
+      }
+    },
+    "appgwCapacity": {
+      "type": "int",
+      "defaultValue": 2,
+      "metadata": {
+        "description": "The number of instances running in the Application Gateway"
+      }
+    },
+    "aseSubdomain": {
+      "type": "string",
+      "defaultValue": "corp.internal",
+      "metadata": {
+        "description": "The subdomain of the App Service Environment. This doesn't need to be a real domain."
+      }
+    },
+    "appName": {
+      "type": "string",
+      "defaultValue": "webapp1",
+      "metadata": {
+        "description": "The name of the app to be deployed. This will be prepended to the App Service Environment subdomain to create the app's hostname."
+      }
+    },
+    "externalAppHostname": {
+      "type": "string",
+      "defaultValue": "webapp1.yourdomain.com",
+      "metadata": {
+        "description": "The public hostname of the app to be deployed. Make sure that your SSL certificate works for this and that you can manage this domain's DNS."
+      }
+    },
+    "pfxBase64": {
+      "type": "string",
+      "metadata": {
+        "description": "The Base64 encoded string of your .pfx certificate. You may use the following PowerShell commands to get that [System.Convert]::ToBase64String((Get-Content 'C:\\path\\to\\cert.pfx' -Encoding Byte)) | Out-File 'cert.pfx.txt'"
+      }
+    },
+    "pfxPassword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "The password of the .pfx certificate"
+      }
+    },
+    "cerBase64": {
+      "type": "string",
+      "metadata": {
+        "description": "The Base64 encoded string of your .cer certificate. That's the public part of your SSL certificate. You may use the DigiCert Certificate Utility https://www.digicert.com/util/pfx-certificate-management-utility-import-export-instructions.htm"
+      }
+    }
+  },
+  "variables": {
+    "vnetName": "appgw-vnet",
+    "appgwName": "appgw",
+    "appgwPublicIpName": "appgw-publicip",
+    "appgwSubnetName": "appgw-subnet",
+    "dnsSubnetName": "dns-subnet",
+    "aseSubnetName": "ase-subnet",
+    "vnetAddressPrefix": "10.0.0.0/16",
+    "appgwSubnetPrefix": "10.0.1.0/24",
+    "dnsSubnetPrefix": "10.0.2.0/24",
+    "aseSubnetPrefix": "10.0.3.0/24",
+    "backendFQDN": "[concat(parameters('appName'),'.',parameters('aseSubdomain'))]",
+    "apiVersion": "2017-03-01",
+    "vnetRef": "[resourceId('Microsoft.Network/virtualNetworks',variables('vnetName'))]",
+    "appgwSubnetRef": "[concat(variables('vnetRef'),'/subnets/',variables('appgwSubnetName'))]",
+    "appgwPublicIPRef": "[resourceId('Microsoft.Network/publicIPAddresses',variables('appgwPublicIpName'))]",
+    "applicationGatewayRef": "[resourceId('Microsoft.Network/applicationGateways',variables('appgwName'))]",
+    "aseIpAddress": "1.2.3.4"
+  },
+
+  "resources": [
+    {
+      "apiVersion": "[variables('apiVersion')]",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "[variables('appgwPublicIpName')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "publicIPAllocationMethod": "Dynamic"
+      },
+      "tags": {
+        "displayName": "Public IP Address"
+      }
+    },
+    {
+      "apiVersion": "[variables('apiVersion')]",
+      "type": "Microsoft.Network/virtualNetworks",
+      "name": "[variables('vnetName')]",
+      "location": "[resourceGroup().location]",
+      "tags": {
+        "displayName": "Virtual Network"
+      },
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "[variables('vnetAddressPrefix')]"
+          ]
+        },
+        "subnets": [
+          {
+            "name": "[variables('appgwSubnetName')]",
+            "properties": {
+              "addressPrefix": "[variables('appgwSubnetPrefix')]"
+            }
+          },
+          {
+            "name": "[variables('dnsSubnetName')]",
+            "properties": {
+              "addressPrefix": "[variables('dnsSubnetPrefix')]"
+            }
+          },
+          {
+            "name": "[variables('aseSubnetName')]",
+            "properties": {
+              "addressPrefix": "[variables('aseSubnetPrefix')]"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "[variables('apiVersion')]",
+      "name": "[variables('appgwName')]",
+      "type": "Microsoft.Network/applicationGateways",
+      "location": "[resourceGroup().location]",
+      "tags": {
+        "displayName": "Application Gateway"
+      },
+      "dependsOn": [
+        "[concat('Microsoft.Network/virtualNetworks/', variables('vnetName'))]",
+        "[concat('Microsoft.Network/publicIPAddresses/', variables('appgwPublicIpName'))]"
+      ],
+      "properties": {
+        "sku": {
+          "name": "[parameters('appgwSkuName')]",
+          "tier": "Standard",
+          "capacity": "[parameters('appgwCapacity')]"
+        },
+        "gatewayIPConfigurations": [
+          {
+            "name": "appgw_gatewayIpconfig",
+            "properties": {
+              "subnet": {
+                "id": "[variables('appgwSubnetRef')]"
+              }
+            }
+          }
+        ],
+        "frontendPorts": [
+          {
+            "name": "appgw_frontendPort_https_443",
+            "properties": {
+              "Port": 443
+            }
+          },
+          {
+            "name": "appgw_frontendPort_http_80",
+            "properties": {
+              "Port": 80
+            }
+          }
+        ],
+        "sslCertificates": [
+          {
+            "name": "sslcertificate",
+            "properties": {
+              "data": "[parameters('pfxBase64')]",
+              "password": "[parameters('pfxPassword')]"
+            }
+          }
+        ],
+        "authenticationCertificates": [
+          {
+            "name": "public_sslertificate",
+            "properties": {
+              "data": "[parameters('cerBase64')]"
+            }
+          }
+        ],
+        "frontendIPConfigurations": [
+          {
+            "name": "appgw_frontendip",
+            "properties": {
+              "PublicIPAddress": {
+                "id": "[variables('appgwPublicIPRef')]"
+              }
+            }
+          }
+        ],
+        "probes": [
+          {
+            "name": "[concat(variables('backendFQDN'),'_probe_https')]",
+            "properties": {
+              "protocol": "Https",
+              "host": "[concat(variables('backendFQDN'))]",
+              "path": "/",
+              "interval": 5,
+              "timeout": 120,
+              "unhealthyThreshold": 2
+            }
+          },
+          {
+            "name": "[concat(variables('backendFQDN'),'_probe_http')]",
+            "properties": {
+              "protocol": "Http",
+              "host": "[concat(variables('backendFQDN'))]",
+              "path": "/",
+              "interval": 5,
+              "timeout": 120,
+              "unhealthyThreshold": 2
+            }
+          }
+        ],
+        "backendHttpSettingsCollection": [
+          {
+            "name": "[concat(variables('backendFQDN'),'_setting_http')]",
+            "properties": {
+              "Port": 80,
+              "Protocol": "Http",
+              "CookieBasedAffinity": "Disabled",
+              "probe": {
+                "id": "[concat(variables('applicationGatewayRef'), '/probes/', variables('backendFQDN'), '_probe_http')]"
+              }
+            }
+          },
+          {
+            "name": "[concat(variables('backendFQDN'),'_setting_https')]",
+            "properties": {
+              "Port": 443,
+              "Protocol": "Https",
+              "CookieBasedAffinity": "Disabled",
+              "probe": {
+                "id": "[concat(variables('applicationGatewayRef'), '/probes/', variables('backendFQDN'), '_probe_https')]"
+              },
+              "authenticationCertificates": [
+                {
+                  "id": "[concat(variables('applicationGatewayRef'), '/authenticationCertificates/public_sslertificate')]"
+                }
+              ]
+            }
+          }
+        ],
+        "httpListeners": [
+          {
+            "name": "[concat(variables('backendFQDN'),'_listener_http')]",
+            "properties": {
+              "FrontendIPConfiguration": {
+                "Id": "[concat(variables('applicationGatewayRef'), '/frontendIPConfigurations/appgw_frontendip')]"
+              },
+              "FrontendPort": {
+                "Id": "[concat(variables('applicationGatewayRef'), '/frontendPorts/appgw_frontendPort_http_80')]"
+              },
+              "Protocol": "Http",
+              "hostName": "[parameters('externalAppHostname')]",
+              "SslCertificate": null
+            }
+          },
+          {
+            "name": "[concat(variables('backendFQDN'),'_listener_https')]",
+            "properties": {
+              "FrontendIPConfiguration": {
+                "Id": "[concat(variables('applicationGatewayRef'), '/frontendIPConfigurations/appgw_frontendip')]"
+              },
+              "FrontendPort": {
+                "Id": "[concat(variables('applicationGatewayRef'), '/frontendPorts/appgw_frontendPort_https_443')]"
+              },
+              "Protocol": "Https",
+              "hostName": "[parameters('externalAppHostname')]",
+              "SslCertificate": {
+                "Id": "[concat(variables('applicationGatewayRef'), '/sslCertificates/sslcertificate')]"
+              },
+              "RequireServerNameIndication": "true"
+            }
+          }
+        ],
+        "backendAddressPools": [
+          {
+            "name": "[concat(variables('backendFQDN'),'_pool')]",
+            "properties": {
+              "BackendAddresses": [
+                {
+                  "IpAddress": "[variables('aseIpAddress')]"
+                }
+              ]
+            }
+          }
+        ],
+        "requestRoutingRules": [
+          {
+            "name": "[concat(variables('backendFQDN'),'_rule_http')]",
+            "properties": {
+              "RuleType": "Basic",
+              "httpListener": {
+                "id": "[concat(variables('applicationGatewayRef'), '/httpListeners/', variables('backendFQDN'),'_listener_http')]"
+              },
+              "backendAddressPool": {
+                "id": "[concat(variables('applicationGatewayRef'), '/backendAddressPools/', variables('backendFQDN'),'_pool')]"
+              },
+              "backendHttpSettings": {
+                "id": "[concat(variables('applicationGatewayRef'), '/backendHttpSettingsCollection/', variables('backendFQDN'),'_setting_http')]"
+              }
+            }
+          },
+          {
+            "name": "[concat(variables('backendFQDN'),'_rule_https')]",
+            "properties": {
+              "RuleType": "Basic",
+              "httpListener": {
+                "id": "[concat(variables('applicationGatewayRef'), '/httpListeners/', variables('backendFQDN'),'_listener_https')]"
+              },
+              "backendAddressPool": {
+                "id": "[concat(variables('applicationGatewayRef'), '/backendAddressPools/', variables('backendFQDN'),'_pool')]"
+              },
+              "backendHttpSettings": {
+                "id": "[concat(variables('applicationGatewayRef'), '/backendHttpSettingsCollection/', variables('backendFQDN'),'_setting_https')]"
+              }
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "outputs": {
+  }
+}
