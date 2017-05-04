@@ -213,6 +213,8 @@
     "appgwName": "appgw",
     "bindVMName": "appgw-bind",
     "appgwPublicIpName": "appgw-publicip",
+    "bindPublicIpName": "appgw-bind-publicip",
+    "bindNSGName": "appgw-bind-nsg",
     "appgwSubnetName": "appgw-subnet",
     "dnsSubnetName": "dns-subnet",
     "aseSubnetName": "ase-subnet",
@@ -235,12 +237,10 @@
     "bindCommandToExecute": "",
     "bindStorageType": "Standard_LRS",
     "bindUbuntuOSVersion": "14.04.2-LTS",
-    "bindStorageName": "[concat('storage', uniqueString(resourceGroup().id))]",
     "bindImagePublisher": "Canonical",
     "bindImageOffer": "UbuntuServer",
     "bindOSDiskName": "appgw-bindOSDisk",
     "bindVmSize": "Standard_A1",
-    "bindStorageAccountContainerName": "vhds",
     "bindNicName": "[concat(variables('bindVMName'), '-nic')]"
   },
 
@@ -278,6 +278,42 @@
     },
     {
       "apiVersion": "[variables('apiVersion')]",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "[variables('bindPublicIpName')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "publicIPAllocationMethod": "Dynamic"
+      },
+      "tags": {
+        "displayName": "Public IP Address for BIND DNS"
+      }
+    },
+    {
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "name": "[variables('bindNSGName')]",
+      "apiVersion": "2016-03-30",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "default-allow-ssh",
+            "properties": {
+              "protocol": "TCP",
+              "sourcePortRange": "*",
+              "destinationPortRange": "22",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 1000,
+              "direction": "Inbound"
+            }
+          }
+        ]
+      },
+      "dependsOn": []
+    },
+    {
+      "apiVersion": "[variables('apiVersion')]",
       "type": "Microsoft.Network/virtualNetworks",
       "name": "[variables('vnetName')]",
       "location": "[resourceGroup().location]",
@@ -291,7 +327,7 @@
           ]
         },
         "dhcpOptions": {
-          "dnsServers": "10.0.2.50"
+          "dnsServers": [ "10.0.2.50" ]
         },
         "subnets": [
           {
@@ -526,7 +562,8 @@
         "displayName": "App Service Environment"
       },
       "dependsOn": [
-        "[concat('Microsoft.Network/virtualNetworks/', variables('vnetName'))]"
+        "[concat('Microsoft.Network/virtualNetworks/', variables('vnetName'))]",
+        "[concat('Microsoft.Compute/virtualMachines/', variables('bindVMName'))]"
       ],
       "properties": {
         "name": "[parameters('aseName')]",
@@ -652,25 +689,13 @@
       ]
     },
     {
-      "name": "[variables('bindStorageName')]",
-      "type": "Microsoft.Storage/storageAccounts",
-      "location": "[resourceGroup().location]",
-      "apiVersion": "2015-06-15",
-      "dependsOn": [],
-      "tags": {
-        "displayName": "BIND VM Storage"
-      },
-      "properties": {
-        "accountType": "[variables('bindStorageType')]"
-      }
-    },
-    {
       "name": "[variables('bindNicName')]",
       "type": "Microsoft.Network/networkInterfaces",
       "location": "[resourceGroup().location]",
       "apiVersion": "2016-03-30",
       "dependsOn": [
-        "[resourceId('Microsoft.Network/virtualNetworks', variables('vnetName'))]"
+        "[resourceId('Microsoft.Network/virtualNetworks', variables('vnetName'))]",
+        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('bindNSGName'))]"
       ],
       "tags": {
         "displayName": "bindNic"
@@ -681,22 +706,28 @@
             "name": "ipconfig1",
             "properties": {
               "privateIPAllocationMethod": "Static",
-              "PrivateIpAddress": "[variables('bindIP')]",
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses/',variables('bindPublicIpName'))]"
+              },
+              "privateIpAddress": "[variables('bindIP')]",
               "subnet": {
                 "id": "[variables('dnsSubnetRef')]"
+              },
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('bindNSGName'))]"
               }
             }
           }
         ]
       }
     },
+
     {
       "name": "[variables('bindVMName')]",
       "type": "Microsoft.Compute/virtualMachines",
       "location": "[resourceGroup().location]",
-      "apiVersion": "2015-06-15",
+      "apiVersion": "2016-04-30-preview",
       "dependsOn": [
-        "[resourceId('Microsoft.Storage/storageAccounts', variables('bindStorageName'))]",
         "[resourceId('Microsoft.Network/networkInterfaces', variables('bindNicName'))]"
       ],
       "tags": {
@@ -719,12 +750,12 @@
             "version": "latest"
           },
           "osDisk": {
-            "name": "appgw-bindOSDisk",
-            "vhd": {
-              "uri": "[concat(reference(resourceId('Microsoft.Storage/storageAccounts', variables('bindStorageName')), '2016-01-01').primaryEndpoints.blob, variables('bindStorageAccountContainerName'), '/', variables('bindOSDiskName'), '.vhd')]"
-            },
+            "name": "appgw-bind-osdisk",
             "caching": "ReadWrite",
-            "createOption": "FromImage"
+            "createOption": "FromImage",
+            "managedDisk": {
+              "storageAccountType": "Standard_LRS"
+            }
           }
         },
         "networkProfile": {
