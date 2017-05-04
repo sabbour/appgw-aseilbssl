@@ -260,4 +260,4 @@ paket-files/
 __pycache__/
 *.pyc
 /appgw-aseilbssl/certs
-/appgw-aseilbssl/azuredeploy.parameters.json
+/appgw-aseilbssl/azuredeploy.local.parameters.json

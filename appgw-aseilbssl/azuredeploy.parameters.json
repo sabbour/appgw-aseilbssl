@@ -1,0 +1,33 @@
+﻿{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "aseLocation": {
+      "value": "West Europe"
+    },
+    "pfxBase64": {
+      "value": "Replace with base64 of pfx"
+    },
+    "cerBase64": {
+      "value": "Replace with base64 of cer"
+    },
+    "pfxThumbprint": {
+      "value": "Replace with pfx thumbprint"
+    },
+    "pfxPassword": {
+      "value": "Replace with pfx password"
+    },
+    "rootZoneName": {
+      "value": "yourdomain.com"
+    },
+    "externalAppHostname": {
+      "value": "webapp1.yourdomain.com"
+    },
+    "appName": {
+      "value": "webapp1"
+    },
+    "aseDNSSuffix": {
+      "value": "internal.yourdomain.com"
+    }
+  }
+}
