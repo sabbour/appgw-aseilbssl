@@ -1,34 +1,15 @@
-# App Service Environment with an Internal Load Balancer and (optional) End-to-End SSL behind an Application Gateway
+# App Service Environment with an Internal Load Balancer and End-to-End SSL behind an Application Gateway
 
-<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2Fazure-quickstart-templates%2Fmaster%2F100-blank-template%2Fazuredeploy.json" target="_blank">
+<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fsabbour%2Fappgw-aseilbssl%2Fmaster%2Fazuredeploy.json" target="_blank">
 <img src="https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.png"/>
 </a>
-<a href="http://armviz.io/#/?load=https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2Fazure-quickstart-templates%2Fmaster%2F100-blank-template%2Fazuredeploy.json" target="_blank">
+<a href="http://armviz.io/#/?load=https%3A%2F%2Fraw.githubusercontent.com%2Fsabbour%2Fappgw-aseilbssl%2Fmaster%2Fazuredeploy.json" target="_blank">
 <img src="https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/visualizebutton.png"/>
 </a>
 
-To deploy this template using the scripts from the root of this repo: (change the folder name below to match the folder name for this sample)
+This template deploys an **App Service Environment + Application Gateway with End-to-End SSL**.
 
-```PowerShell
-.\Deploy-AzureResourceGroup.ps1 -ResourceGroupLocation 'eastus' -ArtifactsStagingDirectory '[foldername]'
-```
-```bash
-azure-group-deploy.sh -a [foldername] -l eastus -u
-```
-If your sample has artifacts that need to be "staged" for deployment (Configuration Scripts, Nested Templates, DSC Packages) then set the upload switch on the command.
-You can optionally specify a storage account to use, if so the storage account must already exist within the subscription.  If you don't want to specify a storage account
-one will be created by the script (think of this as "temp" storage for AzureRM) and reused by subsequent deployments.
-
-```PowerShell
-.\Deploy-AzureResourceGroup.ps1 -ResourceGroupLocation 'eastus' -ArtifactsStagingDirectory '100-blank-template' -UploadArtifacts 
-```
-```bash
-azure-group-deploy.sh -a 100-blank-template -l eastus -u
-```
-
-This template deploys a **solution name**. The **solution name** is a **description**
-
-`Tags: Tag1, Tag2, Tag3`
+`Tags: Application Gateway, App Service Environment`
 
 ## Solution overview and deployed resources
 
@@ -36,16 +17,6 @@ This is an overview of the solution
 
 The following resources are deployed as part of the solution
 
-$SecurePassword = Read-Host -AsSecureString  "Enter Certificate password"
-$BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($SecurePassword)
-$certificatePassword = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
-$cert = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2("C:\Users\asabbour\Desktop\sabbour.me DigiCert_certs\certs\san_star_sabbour_pw.pfx",$certificatePassword)
-[System.Convert]::ToBase64String($cert.GetRawCertData()) | Out-File "C:\Users\asabbour\Documents\Git\appgw-aseilbssl\appgw-aseilbssl\certs\wildcard_sabbour_pw.pfx.txt"
-
-$cer = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2
-$cer.Import("C:\Users\asabbour\Documents\Git\appgw-aseilbssl\appgw-aseilbssl\certs\wildcard_sabbour_pw.cer")
-$bin = $cer.GetRawCertData()
-[System.Convert]::ToBase64String($bin) | Out-File "C:\Users\asabbour\Documents\Git\appgw-aseilbssl\appgw-aseilbssl\certs\wildcard_sabbour_pw.cer.txt"
 
 #### Resource provider 1
 
@@ -70,11 +41,30 @@ Description Resource Provider 3
 
 ## Prerequisites
 
-Decscription of the prerequistes for the deployment
+Before you deploy the template, you need to have your SSL certificate around.
+You can use the powershell scripts below to convert the PFX (with private key) and CER (without private key) to Base64 text to add to the parameters.
+
+$SecurePassword = Read-Host -AsSecureString  "Enter Certificate password"
+$BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($SecurePassword)
+$certificatePassword = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
+$cert = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2("certificate.pfx",$certificatePassword)
+[System.Convert]::ToBase64String($cert.GetRawCertData()) | Out-File "certificate.pfx.txt"
+[System.Convert]::ToBase64String($cert.Thumbprint) | Out-File "certificate.pfx_thumbprint.txt"
+
+$cer = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2
+$cer.Import("certificate.cer")
+$bin = $cer.GetRawCertData()
+[System.Convert]::ToBase64String($bin) | Out-File "certificate.cer.txt"
+
 
 ## Deployment steps
 
 You can click the "deploy to Azure" button at the beginning of this document or follow the instructions for command line deployment using the scripts in the root of this repo.
+
+## Post deployment
+
+You need to update the Backend Pool address in the Application Gateway with the App Service Environment ILB Virtual IP.
+From the deployment options, use either ApplicationGatewayPublicIp or ApplicationGatewayHostname to setup an A record or CNAME for your domain. 
 
 ## Usage
 

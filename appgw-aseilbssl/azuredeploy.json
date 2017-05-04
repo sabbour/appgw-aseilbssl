@@ -2,6 +2,35 @@
   "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
+    "aseLocation": {
+      "type": "string",
+      "allowedValues": [
+        "Central US",
+        "East US",
+        "East US 2",
+        "North Central US",
+        "South Central US",
+        "West Central US",
+        "West US",
+        "West US 2",
+        "Canada Central",
+        "North Europe",
+        "West Europe",
+        "East Asia",
+        "Southeast Asia",
+        "Japan East",
+        "Japan West",
+        "Brazil South",
+        "Australia East",
+        "Australia Southeast",
+        "West India",
+        "Central India",
+        "South India"
+      ],
+      "metadata": {
+        "description": "Location of the App Service Environment. This is a workaround because ASE doesn't like the normalized (ie: westeurope) naming now. Obviously, has to be the same location as your Resource Group."
+      }
+    },
     "appgwSkuName": {
       "type": "string",
       "allowedValues": [
@@ -21,7 +50,7 @@
         "description": "The number of instances running in the Application Gateway"
       }
     },
-    "aseSubdomain": {
+    "aseDNSSuffix": {
       "type": "string",
       "defaultValue": "corp.internal",
       "metadata": {
@@ -45,7 +74,13 @@
     "pfxBase64": {
       "type": "string",
       "metadata": {
-        "description": "The Base64 encoded string of your .pfx certificate. You may use the following PowerShell commands to get that [System.Convert]::ToBase64String((Get-Content 'C:\\path\\to\\cert.pfx' -Encoding Byte)) | Out-File 'cert.pfx.txt'"
+        "description": "A pfx file encoded as a base-64 string.  The pfx contains the SSL certificate that will be configured as the default SSL certificate for the ASE and the AppGW for end-to-end SSL."
+      }
+    },
+    "pfxThumbprint": {
+      "type": "string",
+      "metadata": {
+        "description": "The hexadecimal certificate thumbprint of the certificate contained in pfxBase64.  All spaces need to be removed from the hex string."
       }
     },
     "pfxPassword": {
@@ -58,6 +93,99 @@
       "type": "string",
       "metadata": {
         "description": "The Base64 encoded string of your .cer certificate. That's the public part of your SSL certificate. You may use the DigiCert Certificate Utility https://www.digicert.com/util/pfx-certificate-management-utility-import-export-instructions.htm"
+      }
+    },
+    "appPlanName": {
+      "type": "string",
+      "defaultValue": "appgw-ase-plan",
+      "metadata": {
+        "description": "Name of the App Service Plan"
+      }
+    },
+    "aseName": {
+      "type": "string",
+      "defaultValue": "appgw-ase",
+      "metadata": {
+        "description": "Name of the App Service Environment"
+      }
+    },
+    "aseFrontEndSize": {
+      "type": "string",
+      "allowedValues": [
+        "Medium",
+        "Large",
+        "ExtraLarge"
+      ],
+      "defaultValue": "Medium",
+      "metadata": {
+        "description": "Instance size for the front-end pool.  Maps to P2,P3,P4."
+      }
+    },
+    "aseFrontEndCount": {
+      "type": "int",
+      "defaultValue": 2,
+      "metadata": {
+        "description": "Number of instances in the front-end pool.  Minimum of two."
+      }
+    },
+    "aseWorkerPoolOneInstanceSize": {
+      "type": "string",
+      "allowedValues": [
+        "Small",
+        "Medium",
+        "Large",
+        "ExtraLarge"
+      ],
+      "defaultValue": "Small",
+      "metadata": {
+        "description": "Instance size for worker pool one.  Maps to P1,P2,P3,P4."
+      }
+    },
+    "aseWorkerPoolOneInstanceCount": {
+      "type": "int",
+      "defaultValue": 2,
+      "metadata": {
+        "description": "Number of instances in worker pool one.  Minimum of two."
+      }
+    },
+    "aseWorkerPoolTwoInstanceSize": {
+      "type": "string",
+      "allowedValues": [
+        "Small",
+        "Medium",
+        "Large",
+        "ExtraLarge"
+      ],
+      "defaultValue": "Small",
+      "metadata": {
+        "description": "Instance size for worker pool two.  Maps to P1,P2,P3,P4."
+      }
+    },
+    "aseWorkerPoolTwoInstanceCount": {
+      "type": "int",
+      "defaultValue": 0,
+      "metadata": {
+        "description": "Number of instances in worker pool two.  Can be zero if not using worker pool two."
+      }
+    },
+    "aseWorkerPoolThreeInstanceSize": {
+      "type": "string",
+      "allowedValues": [
+        "Small",
+        "Medium",
+        "Large",
+        "ExtraLarge"
+      ],
+      "defaultValue": "Small",
+      "metadata": {
+        "description": "Instance size for worker pool three.  Maps to P1,P2,P3,P4."
+      }
+    },
+    "aseWorkerPoolThreeInstanceCount": {
+      "type": "int",
+      "defaultValue": 0,
+      "metadata": {
+        "description": "Number of instances in worker pool three.  Can be zero if not using worker pool three."
       }
     }
   },
@@ -72,21 +200,43 @@
     "appgwSubnetPrefix": "10.0.1.0/24",
     "dnsSubnetPrefix": "10.0.2.0/24",
     "aseSubnetPrefix": "10.0.3.0/24",
-    "backendFQDN": "[concat(parameters('appName'),'.',parameters('aseSubdomain'))]",
+    "certificateName": "[concat(parameters('pfxThumbprint'),'_',parameters('aseName'),'_InternalLoadBalancingASE')]",
+    "backendFQDN": "[concat(parameters('appName'),'.',parameters('aseDNSSuffix'))]",
     "apiVersion": "2017-03-01",
     "vnetRef": "[resourceId('Microsoft.Network/virtualNetworks',variables('vnetName'))]",
     "appgwSubnetRef": "[concat(variables('vnetRef'),'/subnets/',variables('appgwSubnetName'))]",
     "appgwPublicIPRef": "[resourceId('Microsoft.Network/publicIPAddresses',variables('appgwPublicIpName'))]",
     "applicationGatewayRef": "[resourceId('Microsoft.Network/applicationGateways',variables('appgwName'))]",
-    "aseIpAddress": "1.2.3.4"
+    "aseRef": "[resourceId('Microsoft.Web/hostingEnvironments',parameters('aseName'))]",
+    "appPlanRef": "[resourceId('Microsoft.Web/serverFarms',parameters('appPlanName'))]",
+    "aseVirtualIp": "10.0.3.9"
   },
 
   "resources": [
     {
+      "apiVersion": "2016-03-01",
+      "type": "Microsoft.Web/certificates",
+      "name": "[variables('certificateName')]",
+      "location": "[resourceGroup().location]",
+      "tags": {
+        "displayName": "SSL Certificate"
+      },
+      "dependsOn": [
+        "[concat('Microsoft.Web/hostingEnvironments/', parameters('aseName'))]"
+      ],
+      "properties": {
+        "pfxBlob": "[parameters('pfxBase64')]",
+        "password": "[parameters('pfxPassword')]",
+        "hostingEnvironmentProfile": {
+          "id": "[variables('aseRef')]"
+        }
+      }
+    },
+    {
       "apiVersion": "[variables('apiVersion')]",
       "type": "Microsoft.Network/publicIPAddresses",
       "name": "[variables('appgwPublicIpName')]",
-      "location": "[resourceGroup().location]",
+      "location": "[resourceGroup().location]",      
       "properties": {
         "publicIPAllocationMethod": "Dynamic"
       },
@@ -140,7 +290,8 @@
       },
       "dependsOn": [
         "[concat('Microsoft.Network/virtualNetworks/', variables('vnetName'))]",
-        "[concat('Microsoft.Network/publicIPAddresses/', variables('appgwPublicIpName'))]"
+        "[concat('Microsoft.Network/publicIPAddresses/', variables('appgwPublicIpName'))]",
+        "[concat('Microsoft.Web/hostingEnvironments/', parameters('aseName'))]"
       ],
       "properties": {
         "sku": {
@@ -291,7 +442,7 @@
             "properties": {
               "BackendAddresses": [
                 {
-                  "IpAddress": "[variables('aseIpAddress')]"
+                  "IpAddress": "[variables('aseVirtualIp')]"
                 }
               ]
             }
@@ -330,8 +481,120 @@
           }
         ]
       }
+    },
+    {
+      "apiVersion": "2016-03-01",
+      "type": "Microsoft.Web/hostingEnvironments",
+      "name": "[parameters('aseName')]",
+      "location": "[parameters('aseLocation')]",
+      "tags": {
+        "displayName": "App Service Environment"
+      },
+      "dependsOn": [
+        "[concat('Microsoft.Network/virtualNetworks/', variables('vnetName'))]"
+      ],
+      "properties": {
+        "name": "[parameters('aseName')]",
+        "location": "[parameters('aseLocation')]",
+        "ipSslAddressCount": "0",
+        "internalLoadBalancingMode": "3",
+        "clusterSettings": [
+          {
+            "name": "DefaultSslCertificateThumbprint",
+            "value": "[parameters('pfxThumbprint')]"
+          }
+        ],
+        "dnsSuffix": "[parameters('aseDNSSuffix')]",
+        "virtualNetwork": {
+          "Id": "[variables('vnetRef')]",
+          "Subnet": "[variables('aseSubnetName')]"
+        },
+        "multiSize": "[parameters('aseFrontEndSize')]",
+        "multiRoleCount": "[parameters('aseFrontEndCount')]",
+        "workerPools": [
+          {
+            "workerSizeId": 0,
+            "workerSize": "[parameters('aseWorkerPoolOneInstanceSize')]",
+            "workerCount": "[parameters('aseWorkerPoolOneInstanceCount')]"
+          },
+          {
+            "workerSizeId": 1,
+            "workerSize": "[parameters('aseWorkerPoolTwoInstanceSize')]",
+            "workerCount": "[parameters('aseWorkerPoolTwoInstanceCount')]"
+          },
+          {
+            "workerSizeId": 2,
+            "workerSize": "[parameters('aseWorkerPoolThreeInstanceSize')]",
+            "workerCount": "[parameters('aseWorkerPoolThreeInstanceCount')]"
+          }
+        ]
+      }
+    },
+    {
+      "name": "[parameters('appPlanName')]",
+      "type": "Microsoft.Web/serverfarms",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-09-01",
+      "dependsOn": [
+        "[concat('Microsoft.Web/hostingEnvironments/', parameters('aseName'))]"
+      ],
+      "tags": {
+        "displayName": "App Service Plan"
+      },
+      "properties": {
+        "name": "[parameters('appPlanName')]",
+        "workerSize": 1,
+        "numberOfWorkers": 1,
+        "hostingEnvironment": "[parameters('aseName')]",
+        "hostingEnvironmentId": "[variables('applicationGatewayRef')]"
+      },
+      "sku": {
+        "Tier": "Premium",
+        "Name": "P1"
+      }
+    },
+    {
+      "name": "[parameters('appName')]",
+      "type": "Microsoft.Web/sites",
+      "kind": "app",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-08-01",
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/serverfarms', parameters('appPlanName'))]"
+      ],
+      "tags": {
+        "displayName": "Web App"
+      },
+      "properties": {
+        "name": "[parameters('appName')]",
+        "serverFarmId": "[variables('appPlanRef')]"
+      }
+    },
+    {
+      "type": "Microsoft.Web/sites/hostnameBindings",
+      "name": "[concat(parameters('appName'), '/', parameters('externalAppHostname'))]",
+      "apiVersion": "2016-03-01",
+      "tags": {
+        "displayName": "Custom Domain"
+      },
+      "properties": {
+        "sslState": "SniEnabled",
+        "thumbprint": "[reference(resourceId('Microsoft.Web/certificates', variables('certificateName'))).Thumbprint]"
+      },
+      "dependsOn": [
+        "[concat('Microsoft.Web/sites/',parameters('appName'))]",
+        "[concat('Microsoft.Web/certificates/',variables('certificateName'))]"
+      ]
     }
   ],
   "outputs": {
+    "ApplicationGatewayPublicIp": {
+      "type": "string",
+      "value": "[reference(concat('Microsoft.Network/publicIPAddresses/', variables('appgwPublicIpName')), '2016-09-01').ipAddress]"
+    },
+    "ApplicationGatewayHostname": {
+      "type": "string",
+      "value": "[reference(concat('Microsoft.Network/publicIPAddresses/', variables('appgwPublicIpName')), '2016-09-01').dnsSettings.fqdn]"
+    }
   }
 }
