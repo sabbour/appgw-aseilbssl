@@ -69,8 +69,14 @@ You can click the "deploy to Azure" button at the beginning of this document or 
 ![ASE ILB VIP](images/ase-virtualip.png)
 ![AppGW Backend Pool IP](images/appgw-backendpool.png)
 
-* From the deployment options, use either ApplicationGatewayPublicIp or ApplicationGatewayHostname to setup an A record or CNAME for your domain. 
-* Update your domain name's nameservers to the one from the template outputs
+* Update your domain name's nameservers to the ones from the template outputs if you're using Azure DNS, or use either ApplicationGatewayPublicIp or ApplicationGatewayHostname to setup an A record or CNAME for your domain if you're hosting the DNS elsewhere.  
+![ARM deployment outputs](images/arm-deploymentoutputs.png)
+
+* After DNS propagates, open http://yourappname.yourdomain.com and https://yourappname.yourdomain.com, both should work and the latter should be using End-to-End SSL. Note that the **REMOTE_ADDR** is actually the IP of the Application Gateway.
+![http-webapp1](images/http-webapp1.png)
+![https-webapp1](images/https-webapp1.png)
+
+
 
 ## Usage
 
