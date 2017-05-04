@@ -1,9 +1,9 @@
 # App Service Environment with an Internal Load Balancer and End-to-End SSL behind an Application Gateway
 
-<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fsabbour%2Fappgw-aseilbssl%2Fmaster%2Fazuredeploy.json" target="_blank">
+<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fsabbour%2Fappgw-aseilbssl%2Fmaster%2Fappgw-aseilbssl%2Fazuredeploy.json" target="_blank">
 <img src="https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.png"/>
 </a>
-<a href="http://armviz.io/#/?load=https%3A%2F%2Fraw.githubusercontent.com%2Fsabbour%2Fappgw-aseilbssl%2Fmaster%2Fazuredeploy.json" target="_blank">
+<a href="http://armviz.io/#/?load=https%3A%2F%2Fraw.githubusercontent.com%2Fsabbour%2Fappgw-aseilbssl%2Fmaster%2Fappgw-aseilbssl%2Fazuredeploy.json" target="_blank">
 <img src="https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/visualizebutton.png"/>
 </a>
 
@@ -61,12 +61,13 @@ $bin = $cer.GetRawCertData()
 
 ## Deployment steps
 
-You can click the "deploy to Azure" button at the beginning of this document or follow the instructions for command line deployment using the scripts in the root of this repo.
+You can click the "Deploy to Azure" button at the beginning of this document.
 
 ## Post deployment
 
 * You need to update the Backend Pool address in the Application Gateway with the App Service Environment ILB Virtual IP.
 ![ASE ILB VIP](images/ase-virtualip.png)
+
 ![AppGW Backend Pool IP](images/appgw-backendpool.png)
 
 * Update your domain name's nameservers to the ones from the template outputs if you're using Azure DNS, or use either ApplicationGatewayPublicIp or ApplicationGatewayHostname to setup an A record or CNAME for your domain if you're hosting the DNS elsewhere.  
@@ -74,20 +75,5 @@ You can click the "deploy to Azure" button at the beginning of this document or 
 
 * After DNS propagates, open http://yourappname.yourdomain.com and https://yourappname.yourdomain.com, both should work and the latter should be using End-to-End SSL. Note that the **REMOTE_ADDR** is actually the IP of the Application Gateway.
 ![http-webapp1](images/http-webapp1.png)
+
 ![https-webapp1](images/https-webapp1.png)
-
-
-
-## Usage
-
-#### Connect
-
-How to connect to the solution
-
-#### Management
-
-How to manage the solution
-
-## Notes
-
-Solution notes
