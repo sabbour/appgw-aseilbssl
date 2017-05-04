@@ -64,6 +64,13 @@
         "description": "The name of the app to be deployed. This will be prepended to the App Service Environment subdomain to create the app's hostname."
       }
     },
+    "rootZoneName": {
+      "type": "string",
+      "defaultValue": "yourdomain.com",
+      "metadata": {
+        "description": "The public hostname of the app to be deployed. Make sure that your SSL certificate works for this and that you can manage this domain's DNS."
+      }
+    },
     "externalAppHostname": {
       "type": "string",
       "defaultValue": "webapp1.yourdomain.com",
@@ -236,7 +243,7 @@
       "apiVersion": "[variables('apiVersion')]",
       "type": "Microsoft.Network/publicIPAddresses",
       "name": "[variables('appgwPublicIpName')]",
-      "location": "[resourceGroup().location]",      
+      "location": "[resourceGroup().location]",
       "properties": {
         "publicIPAllocationMethod": "Dynamic"
       },
@@ -334,7 +341,7 @@
         ],
         "authenticationCertificates": [
           {
-            "name": "public_sslertificate",
+            "name": "backend_whitelist_sslcertificate",
             "properties": {
               "data": "[parameters('cerBase64')]"
             }
@@ -355,22 +362,22 @@
             "name": "[concat(variables('backendFQDN'),'_probe_https')]",
             "properties": {
               "protocol": "Https",
-              "host": "[concat(variables('backendFQDN'))]",
+              "host": "[variables('backendFQDN')]",
               "path": "/",
-              "interval": 5,
+              "interval": 30,
               "timeout": 120,
-              "unhealthyThreshold": 2
+              "unhealthyThreshold": 8
             }
           },
           {
             "name": "[concat(variables('backendFQDN'),'_probe_http')]",
             "properties": {
               "protocol": "Http",
-              "host": "[concat(variables('backendFQDN'))]",
+              "host": "[variables('backendFQDN')]",
               "path": "/",
-              "interval": 5,
+              "interval": 30,
               "timeout": 120,
-              "unhealthyThreshold": 2
+              "unhealthyThreshold": 8
             }
           }
         ],
@@ -397,7 +404,7 @@
               },
               "authenticationCertificates": [
                 {
-                  "id": "[concat(variables('applicationGatewayRef'), '/authenticationCertificates/public_sslertificate')]"
+                  "id": "[concat(variables('applicationGatewayRef'), '/authenticationCertificates/backend_whitelist_sslcertificate')]"
                 }
               ]
             }
@@ -405,7 +412,7 @@
         ],
         "httpListeners": [
           {
-            "name": "[concat(variables('backendFQDN'),'_listener_http')]",
+            "name": "[concat(parameters('externalAppHostname'),'_listener_http')]",
             "properties": {
               "FrontendIPConfiguration": {
                 "Id": "[concat(variables('applicationGatewayRef'), '/frontendIPConfigurations/appgw_frontendip')]"
@@ -419,7 +426,7 @@
             }
           },
           {
-            "name": "[concat(variables('backendFQDN'),'_listener_https')]",
+            "name": "[concat(parameters('externalAppHostname'),'_listener_https')]",
             "properties": {
               "FrontendIPConfiguration": {
                 "Id": "[concat(variables('applicationGatewayRef'), '/frontendIPConfigurations/appgw_frontendip')]"
@@ -454,7 +461,7 @@
             "properties": {
               "RuleType": "Basic",
               "httpListener": {
-                "id": "[concat(variables('applicationGatewayRef'), '/httpListeners/', variables('backendFQDN'),'_listener_http')]"
+                "id": "[concat(variables('applicationGatewayRef'), '/httpListeners/', parameters('externalAppHostname'),'_listener_http')]"
               },
               "backendAddressPool": {
                 "id": "[concat(variables('applicationGatewayRef'), '/backendAddressPools/', variables('backendFQDN'),'_pool')]"
@@ -469,7 +476,7 @@
             "properties": {
               "RuleType": "Basic",
               "httpListener": {
-                "id": "[concat(variables('applicationGatewayRef'), '/httpListeners/', variables('backendFQDN'),'_listener_https')]"
+                "id": "[concat(variables('applicationGatewayRef'), '/httpListeners/', parameters('externalAppHostname'),'_listener_https')]"
               },
               "backendAddressPool": {
                 "id": "[concat(variables('applicationGatewayRef'), '/backendAddressPools/', variables('backendFQDN'),'_pool')]"
@@ -585,6 +592,36 @@
         "[concat('Microsoft.Web/sites/',parameters('appName'))]",
         "[concat('Microsoft.Web/certificates/',variables('certificateName'))]"
       ]
+    },
+    {
+      "type": "Microsoft.Network/dnszones",
+      "name": "[parameters('rootZoneName')]",
+      "apiVersion": "2016-04-01",
+      "location": "global",
+      "tags": {},
+      "properties": {
+        "maxNumberOfRecordSets": 5000,
+        "numberOfRecordSets": 3
+      },
+      "dependsOn": []
+    },
+    {
+      "type": "Microsoft.Network/dnszones/A",
+      "name": "[concat(parameters('rootZoneName'),'/',parameters('appName'))]",
+      "apiVersion": "2016-04-01",
+      "properties": {
+        "TTL": 120,
+        "ARecords": [
+          {
+            "ipv4Address": "[reference(concat('Microsoft.Network/publicIPAddresses/', variables('appgwPublicIpName')), '2016-09-01').ipAddress]"
+          }
+        ]
+        
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/dnszones', parameters('rootZoneName'))]",
+        "[resourceId('Microsoft.Network/publicIPAddresses', variables('appgwPublicIpName'))]"
+      ]
     }
   ],
   "outputs": {
@@ -595,6 +632,22 @@
     "ApplicationGatewayHostname": {
       "type": "string",
       "value": "[reference(concat('Microsoft.Network/publicIPAddresses/', variables('appgwPublicIpName')), '2016-09-01').dnsSettings.fqdn]"
+    },
+    "AzureDNSNS1": {
+      "type": "string",
+      "value": "[reference(concat('Microsoft.Network/dnsZones/', parameters('rootZoneName')), '2016-04-01').nameServers[0]]"
+    },
+    "AzureDNSNS2": {
+      "type": "string",
+      "value": "[reference(concat('Microsoft.Network/dnsZones/', parameters('rootZoneName')), '2016-04-01').nameServers[1]]"
+    },
+    "AzureDNSNS3": {
+      "type": "string",
+      "value": "[reference(concat('Microsoft.Network/dnsZones/', parameters('rootZoneName')), '2016-04-01').nameServers[2]]"
+    },
+    "AzureDNSNS4": {
+      "type": "string",
+      "value": "[reference(concat('Microsoft.Network/dnsZones/', parameters('rootZoneName')), '2016-04-01').nameServers[3]]"
     }
   }
 }
