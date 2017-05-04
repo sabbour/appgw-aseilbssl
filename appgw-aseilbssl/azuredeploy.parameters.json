@@ -28,6 +28,12 @@
     },
     "aseDNSSuffix": {
       "value": "internal.yourdomain.com"
+    },
+    "bindUsername": {
+      "value": "azureuser"
+    },
+    "bindPassword": {
+      "value": ""
     }
   }
 }
