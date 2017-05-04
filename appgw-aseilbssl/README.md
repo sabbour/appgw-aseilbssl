@@ -44,18 +44,20 @@ Description Resource Provider 3
 Before you deploy the template, you need to have your SSL certificate around.
 You can use the powershell scripts below to convert the PFX (with private key) and CER (without private key) to Base64 text to add to the parameters.
 
-	$SecurePassword = Read-Host -AsSecureString  "Enter Certificate password"
-	$BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($SecurePassword)
-	$certificatePassword = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
-	$cert = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2("certificate.pfx",$certificatePassword)
-	[System.Convert]::ToBase64String($cert.GetRawCertData()) | Out-File "certificate.pfx.txt"
-	[System.Convert]::ToBase64String($cert.Thumbprint) | Out-File "certificate.pfx_thumbprint.txt"
-
-	$cer = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2
-	$cer.Import("certificate.cer")
-	$bin = $cer.GetRawCertData()
-	[System.Convert]::ToBase64String($bin) | Out-File "certificate.cer.txt"
-
+```
+$SecurePassword = Read-Host -AsSecureString  "Enter Certificate password"
+$BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($SecurePassword)
+$certificatePassword = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
+$cert = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2("certificate.pfx",$certificatePassword)
+[System.Convert]::ToBase64String($cert.GetRawCertData()) | Out-File "certificate.pfx.txt"
+[System.Convert]::ToBase64String($cert.Thumbprint) | Out-File "certificate.pfx_thumbprint.txt"
+```
+```
+$cer = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2
+$cer.Import("certificate.cer")
+$bin = $cer.GetRawCertData()
+[System.Convert]::ToBase64String($bin) | Out-File "certificate.cer.txt"
+```
 
 ## Deployment steps
 
