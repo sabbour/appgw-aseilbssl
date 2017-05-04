@@ -66,6 +66,9 @@ You can click the "deploy to Azure" button at the beginning of this document or 
 ## Post deployment
 
 * You need to update the Backend Pool address in the Application Gateway with the App Service Environment ILB Virtual IP.
+![ASE ILB VIP](images/ase-virtualip.png)
+![AppGW Backend Pool IP](images/appgw-bakendpool.png)
+
 * From the deployment options, use either ApplicationGatewayPublicIp or ApplicationGatewayHostname to setup an A record or CNAME for your domain. 
 * Update your domain name's nameservers to the one from the template outputs
 

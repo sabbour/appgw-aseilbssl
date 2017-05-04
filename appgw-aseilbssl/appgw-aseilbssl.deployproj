@@ -33,11 +33,12 @@
     </None>
     <Content Include="Deploy-AzureResourceGroup.ps1" />
     <Content Include="README.md" />
+    <None Include="images\appgw-backendpool.png" />
+    <None Include="images\ase-virtualip.png" />
     <None Include="metadata.json" />
     <None Include="index.php" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="images\" />
     <Folder Include="scripts\" />
   </ItemGroup>
   <Target Name="GetReferenceAssemblyPaths" />
