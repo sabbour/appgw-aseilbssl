@@ -4,4 +4,4 @@ zone "{_internalzonename_}" {
         type master;
         file "/etc/bind/zones/{_internalzonename_}.db";
         allow-query { any; };
-}
+};
