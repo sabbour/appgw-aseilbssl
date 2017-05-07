@@ -2,7 +2,7 @@
 internalzonename=$1
 aseinternalip=$2
 bindinternalip=$3
-timestamp=4
+timestamp=$4
 
 # Replace /etc/resolv.conf with our resolv.conf to temporarily change the DNS to 8.8.8.8
 echo 'Temporarily overriding DNS to be 8.8.8.8'
