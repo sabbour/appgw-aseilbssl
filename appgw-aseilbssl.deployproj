@@ -26,22 +26,25 @@
   <!-- vertag<:>end -->
   <ItemGroup>
     <Content Include="azuredeploy.json" />
+    <None Include="appgw-aseilbssl.sln" />
     <None Include="azuredeploy.local.parameters.json" />
     <None Include="azuredeploy.parameters.json" />
     <None Include="Deployment.targets">
       <Visible>False</Visible>
     </None>
     <Content Include="Deploy-AzureResourceGroup.ps1" />
-    <Content Include="README.md" />
     <None Include="images\appgw-backendpool.png" />
     <None Include="images\architecture.png" />
     <None Include="images\arm-deploymentoutputs.png" />
     <None Include="images\ase-virtualip.png" />
+    <None Include="images\diagram.pptx" />
     <None Include="images\domain-nameservers.png" />
     <None Include="images\http-webapp1.png" />
     <None Include="images\https-webapp1.png" />
+    <None Include="LICENSE" />
     <None Include="metadata.json" />
     <None Include="index.php" />
+    <None Include="README.md" />
     <None Include="scripts\install-bind.sh" />
     <None Include="scripts\named.conf.local" />
     <None Include="scripts\named.conf.options" />
