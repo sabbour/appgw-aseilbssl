@@ -1,0 +1,7 @@
+# /etc/bind/named.conf.local
+# Forward zone
+zone "{_internalzonename_}" IN {
+         type master;
+         file "/etc/bind/zones/{_internalzonename_}.db";
+         allow-query { any; };
+ };

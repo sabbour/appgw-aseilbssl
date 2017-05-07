@@ -57,6 +57,21 @@
         "description": "The subdomain of the App Service Environment. This doesn't need to be a real domain."
       }
     },
+
+    "aseVirtualIp": {
+      "type": "string",
+      "defaultValue": "10.0.3.9",
+      "metadata": {
+        "description": "The Virtual IP of the App Service Environment's Internal Load Balancer. There is no easy way to obtain it post deployment, hence it is here."
+      }
+    },
+    "customScriptTimestamp": {
+      "type": "int",
+      "defaultValue": 1,
+      "metadata": {
+        "description": "Timestamp sent to the CustomScript extension. If you need to run the script again, you need to change this value when running the template."
+      }
+    },
     "appName": {
       "type": "string",
       "defaultValue": "webapp1",
@@ -206,6 +221,19 @@
       "metadata": {
         "description": "Password for the BIND DNS Virtual Machine."
       }
+    },
+    "_artifactsLocation": {
+      "type": "string",
+      "defaultValue": "https://raw.githubusercontent.com/sabbour/appgw-aseilbssl/appgw-aseilbssl",
+      "metadata": {
+        "description": "Container in staging storage account to receive post-build staging folder upload"
+      }
+    },
+    "_artifactsLocationSasToken": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Auto-generated token to access _artifactsLocation"
+      }
     }
   },
   "variables": {
@@ -233,7 +261,6 @@
     "applicationGatewayRef": "[resourceId('Microsoft.Network/applicationGateways',variables('appgwName'))]",
     "aseRef": "[resourceId('Microsoft.Web/hostingEnvironments',parameters('aseName'))]",
     "appPlanRef": "[resourceId('Microsoft.Web/serverFarms',parameters('appPlanName'))]",
-    "aseVirtualIp": "10.0.3.9",
     "bindCommandToExecute": "",
     "bindStorageType": "Standard_LRS",
     "bindUbuntuOSVersion": "14.04.2-LTS",
@@ -245,73 +272,6 @@
   },
 
   "resources": [
-    {
-      "apiVersion": "2016-03-01",
-      "type": "Microsoft.Web/certificates",
-      "name": "[variables('certificateName')]",
-      "location": "[resourceGroup().location]",
-      "tags": {
-        "displayName": "SSL Certificate"
-      },
-      "dependsOn": [
-        "[concat('Microsoft.Web/hostingEnvironments/', parameters('aseName'))]"
-      ],
-      "properties": {
-        "pfxBlob": "[parameters('pfxBase64')]",
-        "password": "[parameters('pfxPassword')]",
-        "hostingEnvironmentProfile": {
-          "id": "[variables('aseRef')]"
-        }
-      }
-    },
-    {
-      "apiVersion": "[variables('apiVersion')]",
-      "type": "Microsoft.Network/publicIPAddresses",
-      "name": "[variables('appgwPublicIpName')]",
-      "location": "[resourceGroup().location]",
-      "properties": {
-        "publicIPAllocationMethod": "Dynamic"
-      },
-      "tags": {
-        "displayName": "Public IP Address"
-      }
-    },
-    {
-      "apiVersion": "[variables('apiVersion')]",
-      "type": "Microsoft.Network/publicIPAddresses",
-      "name": "[variables('bindPublicIpName')]",
-      "location": "[resourceGroup().location]",
-      "properties": {
-        "publicIPAllocationMethod": "Dynamic"
-      },
-      "tags": {
-        "displayName": "Public IP Address for BIND DNS"
-      }
-    },
-    {
-      "type": "Microsoft.Network/networkSecurityGroups",
-      "name": "[variables('bindNSGName')]",
-      "apiVersion": "2016-03-30",
-      "location": "[resourceGroup().location]",
-      "properties": {
-        "securityRules": [
-          {
-            "name": "default-allow-ssh",
-            "properties": {
-              "protocol": "TCP",
-              "sourcePortRange": "*",
-              "destinationPortRange": "22",
-              "sourceAddressPrefix": "*",
-              "destinationAddressPrefix": "*",
-              "access": "Allow",
-              "priority": 1000,
-              "direction": "Inbound"
-            }
-          }
-        ]
-      },
-      "dependsOn": []
-    },
     {
       "apiVersion": "[variables('apiVersion')]",
       "type": "Microsoft.Network/virtualNetworks",
@@ -552,6 +512,20 @@
           }
         ]
       }
+      "resources": [
+        {
+          "apiVersion": "[variables('apiVersion')]",
+          "type": "Microsoft.Network/publicIPAddresses",
+          "name": "[variables('appgwPublicIpName')]",
+          "location": "[resourceGroup().location]",
+          "properties": {
+            "publicIPAllocationMethod": "Dynamic"
+          },
+          "tags": {
+            "displayName": "AppGW public IP address"
+          }
+        }
+      ]
     },
     {
       "apiVersion": "2016-03-01",
@@ -600,62 +574,87 @@
             "workerCount": "[parameters('aseWorkerPoolThreeInstanceCount')]"
           }
         ]
-      }
-    },
-    {
-      "name": "[parameters('appPlanName')]",
-      "type": "Microsoft.Web/serverfarms",
-      "location": "[resourceGroup().location]",
-      "apiVersion": "2016-09-01",
-      "dependsOn": [
-        "[concat('Microsoft.Web/hostingEnvironments/', parameters('aseName'))]"
-      ],
-      "tags": {
-        "displayName": "App Service Plan"
       },
-      "properties": {
-        "name": "[parameters('appPlanName')]",
-        "workerSize": 1,
-        "numberOfWorkers": 1,
-        "hostingEnvironment": "[parameters('aseName')]",
-        "hostingEnvironmentId": "[variables('applicationGatewayRef')]"
-      },
-      "sku": {
-        "Tier": "Premium",
-        "Name": "P1"
-      }
-    },
-    {
-      "name": "[parameters('appName')]",
-      "type": "Microsoft.Web/sites",
-      "kind": "app",
-      "location": "[resourceGroup().location]",
-      "apiVersion": "2016-08-01",
-      "dependsOn": [
-        "[resourceId('Microsoft.Web/serverfarms', parameters('appPlanName'))]"
-      ],
-      "tags": {
-        "displayName": "Web App"
-      },
-      "properties": {
-        "name": "[parameters('appName')]",
-        "serverFarmId": "[variables('appPlanRef')]"
-      }
-    },
-    {
-      "type": "Microsoft.Web/sites/hostnameBindings",
-      "name": "[concat(parameters('appName'), '/', parameters('externalAppHostname'))]",
-      "apiVersion": "2016-03-01",
-      "tags": {
-        "displayName": "Custom Domain"
-      },
-      "properties": {
-        "sslState": "SniEnabled",
-        "thumbprint": "[reference(resourceId('Microsoft.Web/certificates', variables('certificateName'))).Thumbprint]"
-      },
-      "dependsOn": [
-        "[concat('Microsoft.Web/sites/',parameters('appName'))]",
-        "[concat('Microsoft.Web/certificates/',variables('certificateName'))]"
+      "resources": [
+        {
+          "name": "[parameters('appPlanName')]",
+          "type": "Microsoft.Web/serverfarms",
+          "location": "[resourceGroup().location]",
+          "apiVersion": "2016-09-01",
+          "dependsOn": [
+            "[concat('Microsoft.Web/hostingEnvironments/', parameters('aseName'))]"
+          ],
+          "tags": {
+            "displayName": "App Service Plan"
+          },
+          "properties": {
+            "name": "[parameters('appPlanName')]",
+            "workerSize": 1,
+            "numberOfWorkers": 1,
+            "hostingEnvironment": "[parameters('aseName')]",
+            "hostingEnvironmentId": "[variables('applicationGatewayRef')]"
+          },
+          "sku": {
+            "Tier": "Premium",
+            "Name": "P1"
+          },
+          "resources": [
+            {
+              "name": "[parameters('appName')]",
+              "type": "Microsoft.Web/sites",
+              "kind": "app",
+              "location": "[resourceGroup().location]",
+              "apiVersion": "2016-08-01",
+              "dependsOn": [
+                "[resourceId('Microsoft.Web/serverfarms', parameters('appPlanName'))]"
+              ],
+              "tags": {
+                "displayName": "Web App"
+              },
+              "properties": {
+                "name": "[parameters('appName')]",
+                "serverFarmId": "[variables('appPlanRef')]"
+              },
+              "resources": [
+                {
+                  "type": "Microsoft.Web/sites/hostnameBindings",
+                  "name": "[concat(parameters('appName'), '/', parameters('externalAppHostname'))]",
+                  "apiVersion": "2016-03-01",
+                  "tags": {
+                    "displayName": "Custom Domain"
+                  },
+                  "properties": {
+                    "sslState": "SniEnabled",
+                    "thumbprint": "[reference(resourceId('Microsoft.Web/certificates', variables('certificateName'))).Thumbprint]"
+                  },
+                  "dependsOn": [
+                    "[concat('Microsoft.Web/sites/',parameters('appName'))]",
+                    "[concat('Microsoft.Web/certificates/',variables('certificateName'))]"
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "apiVersion": "2016-03-01",
+          "type": "Microsoft.Web/certificates",
+          "name": "[variables('certificateName')]",
+          "location": "[resourceGroup().location]",
+          "tags": {
+            "displayName": "SSL Certificate"
+          },
+          "dependsOn": [
+            "[concat('Microsoft.Web/hostingEnvironments/', parameters('aseName'))]"
+          ],
+          "properties": {
+            "pfxBlob": "[parameters('pfxBase64')]",
+            "password": "[parameters('pfxPassword')]",
+            "hostingEnvironmentProfile": {
+              "id": "[variables('aseRef')]"
+            }
+          }
+        }
       ]
     },
     {
@@ -688,40 +687,6 @@
         "[resourceId('Microsoft.Network/publicIPAddresses', variables('appgwPublicIpName'))]"
       ]
     },
-    {
-      "name": "[variables('bindNicName')]",
-      "type": "Microsoft.Network/networkInterfaces",
-      "location": "[resourceGroup().location]",
-      "apiVersion": "2016-03-30",
-      "dependsOn": [
-        "[resourceId('Microsoft.Network/virtualNetworks', variables('vnetName'))]",
-        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('bindNSGName'))]"
-      ],
-      "tags": {
-        "displayName": "bindNic"
-      },
-      "properties": {
-        "ipConfigurations": [
-          {
-            "name": "ipconfig1",
-            "properties": {
-              "privateIPAllocationMethod": "Static",
-              "publicIPAddress": {
-                "id": "[resourceId('Microsoft.Network/publicIPAddresses/',variables('bindPublicIpName'))]"
-              },
-              "privateIpAddress": "[variables('bindIP')]",
-              "subnet": {
-                "id": "[variables('dnsSubnetRef')]"
-              },
-              "networkSecurityGroup": {
-                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('bindNSGName'))]"
-              }
-            }
-          }
-        ]
-      }
-    },
-
     {
       "name": "[variables('bindVMName')]",
       "type": "Microsoft.Compute/virtualMachines",
@@ -765,11 +730,114 @@
             }
           ]
         }
-      }
+      },
+      "resources": [
+        {
+          "type": "Microsoft.Network/networkSecurityGroups",
+          "name": "[variables('bindNSGName')]",
+          "apiVersion": "2016-03-30",
+          "location": "[resourceGroup().location]",
+          "tags": {
+            "displayName": "BIND DNS Network Security Group"
+          },
+          "properties": {
+            "securityRules": [
+              {
+                "name": "default-allow-ssh",
+                "properties": {
+                  "protocol": "TCP",
+                  "sourcePortRange": "*",
+                  "destinationPortRange": "22",
+                  "sourceAddressPrefix": "*",
+                  "destinationAddressPrefix": "*",
+                  "access": "Allow",
+                  "priority": 1000,
+                  "direction": "Inbound"
+                }
+              }
+            ]
+          },
+          "dependsOn": []
+        },
+        {
+          "apiVersion": "[variables('apiVersion')]",
+          "type": "Microsoft.Network/publicIPAddresses",
+          "name": "[variables('bindPublicIpName')]",
+          "location": "[resourceGroup().location]",
+          "properties": {
+            "publicIPAllocationMethod": "Dynamic"
+          },
+          "tags": {
+            "displayName": "Public IP Address for BIND DNS"
+          }
+        },
+        {
+          "name": "[variables('bindNicName')]",
+          "type": "Microsoft.Network/networkInterfaces",
+          "location": "[resourceGroup().location]",
+          "apiVersion": "2016-03-30",
+          "dependsOn": [
+            "[resourceId('Microsoft.Network/virtualNetworks', variables('vnetName'))]",
+            "[resourceId('Microsoft.Network/networkSecurityGroups', variables('bindNSGName'))]"
+          ],
+          "tags": {
+            "displayName": "bindNic"
+          },
+          "properties": {
+            "ipConfigurations": [
+              {
+                "name": "ipconfig1",
+                "properties": {
+                  "privateIPAllocationMethod": "Static",
+                  "publicIPAddress": {
+                    "id": "[resourceId('Microsoft.Network/publicIPAddresses/',variables('bindPublicIpName'))]"
+                  },
+                  "privateIpAddress": "[variables('bindIP')]",
+                  "subnet": {
+                    "id": "[variables('dnsSubnetRef')]"
+                  },
+                  "networkSecurityGroup": {
+                    "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('bindNSGName'))]"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "name": "SetupBindCustomScript",
+          "type": "extensions",
+          "location": "[resourceGroup().location]",
+          "apiVersion": "2016-03-30",
+          "dependsOn": [
+            "[resourceId('Microsoft.Compute/virtualMachines', variables('bindVMName'))]"
+          ],
+          "tags": {
+            "displayName": "SetupBindCustomScript"
+          },
+          "properties": {
+            "publisher": "Microsoft.OSTCExtensions",
+            "type": "CustomScriptForLinux",
+            "typeHandlerVersion": "1.4",
+            "autoUpgradeMinorVersion": true,
+            "settings": {
+              "fileUris": [
+                "[concat(parameters('_artifactsLocation'), '/scripts/install-bind.sh')]",
+                "[concat(parameters('_artifactsLocation'), '/scripts/named.conf.local')]",
+                "[concat(parameters('_artifactsLocation'), '/scripts/named.conf.options')]",
+                "[concat(parameters('_artifactsLocation'), '/scripts/resolv.conf')]",
+                "[concat(parameters('_artifactsLocation'), '/scripts/zone.db')]"
+              ],
+              "commandToExecute": "[concat('sh install-bind.sh ', parameters('aseDNSSuffix'), ' ', parameters('aseVirtualIp'), ' ', variables('bindIP'))]",
+              "timestamp": "[parameters('customScriptTimestamp')]"
+            }
+          }
+        }
+      ]
     }
   ],
   "outputs": {
-    "ApplicationGatewayPublicIp": {
+    "ApplicationGatewayPublicIp":  
       "type": "string",
       "value": "[reference(concat('Microsoft.Network/publicIPAddresses/', variables('appgwPublicIpName')), '2016-09-01').ipAddress]"
     },

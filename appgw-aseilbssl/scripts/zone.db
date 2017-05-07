@@ -1,0 +1,13 @@
+@       IN SOA  ns1.{_internalzonename_}. admins.{_internalzonename_}. (
+                                 2017050101      ; serial
+                                         1D      ; refresh
+                                         1H      ; retry
+                                         1W      ; expire
+                                         3H )    ; minimum
+
+@       NS      ns1.{_internalzonename_}.
+ns1     IN      A       {_bindinternalip_}
+*       IN      A       {_aseinternalip_}
+*.scm   IN      A       {_aseinternalip_}
+ftp     IN      A       {_aseinternalip_}
+publish IN      A       {_aseinternalip_}

@@ -36,13 +36,16 @@
     <None Include="images\appgw-backendpool.png" />
     <None Include="images\arm-deploymentoutputs.png" />
     <None Include="images\ase-virtualip.png" />
+    <None Include="images\domain-nameservers.png" />
     <None Include="images\http-webapp1.png" />
     <None Include="images\https-webapp1.png" />
     <None Include="metadata.json" />
     <None Include="index.php" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="scripts\" />
+    <None Include="scripts\install-bind.sh" />
+    <None Include="scripts\named.conf.local" />
+    <None Include="scripts\named.conf.options" />
+    <None Include="scripts\resolv.conf" />
+    <None Include="scripts\zone.db" />
   </ItemGroup>
   <Target Name="GetReferenceAssemblyPaths" />
   <ProjectExtensions>
