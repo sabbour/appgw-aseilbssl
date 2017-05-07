@@ -259,5 +259,5 @@ paket-files/
 # Python Tools for Visual Studio (PTVS)
 __pycache__/
 *.pyc
-/appgw-aseilbssl/certs
-/appgw-aseilbssl/azuredeploy.local.parameters.json
+/azuredeploy.local.parameters.json
+/certs
