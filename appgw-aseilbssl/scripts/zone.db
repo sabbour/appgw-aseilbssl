@@ -1,10 +1,14 @@
+;
+; BIND data file for {_internalzonename_}
+;
+$TTL    604800
 @       IN SOA  ns1.{_internalzonename_}. admins.{_internalzonename_}. (
-                                 2017050101      ; serial
-                                         1D      ; refresh
-                                         1H      ; retry
-                                         1W      ; expire
-                                         3H )    ; minimum
-$TTL    3600
+                    {_timestamp_}   ; Serial
+                     604800         ; Refresh
+                      86400         ; Retry
+                    2419200         ; Expire
+                     604800 )       ; Negative Cache TTL
+
 @       NS      ns1.{_internalzonename_}.
 ns1     IN      A       {_bindinternalip_}
 *       IN      A       {_aseinternalip_}

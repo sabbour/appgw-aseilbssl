@@ -2,6 +2,7 @@
 internalzonename=$1
 aseinternalip=$2
 bindinternalip=$3
+timestamp=4
 
 # Replace /etc/resolv.conf with our resolv.conf to temporarily change the DNS to 8.8.8.8
 echo 'Temporarily overriding DNS to be 8.8.8.8'
@@ -25,10 +26,11 @@ cp named.conf.local /etc/bind/named.conf.local
 echo "Creating /etc/bind/zones directory"
 mkdir -p /etc/bind/zones
 
-echo "String replace {_internalzonename_} with $internalzonename, {_aseinternalip_} with $aseinternalip and  {_bindinternalip_} with $bindinternalip in zone.db"
+echo "String replace {_internalzonename_} with $internalzonename, {_aseinternalip_} with $aseinternalip, {_bindinternalip_} with $bindinternalip, {_timestamp_} with $timestamp in zone.db"
 sed -i "s/{_internalzonename_}/$internalzonename/g" zone.db
 sed -i "s/{_aseinternalip_}/$aseinternalip/g" zone.db
 sed -i "s/{_bindinternalip_}/$bindinternalip/g" zone.db
+sed -i "s/{_timestamp_}/$timestamp/g" zone.db
 
 echo "Override /etc/bind/zones/$internalzonename"
 cp zone.db /etc/bind/zones/${internalzonename}.db
@@ -42,4 +44,5 @@ echo "Restart BIND"
 service bind9 restart
 
 # Check the configuration (will output in console)
+echo "Checking config"
 named-checkzone ${internalzonename} /etc/bind/zones/${internalzonename}.db
