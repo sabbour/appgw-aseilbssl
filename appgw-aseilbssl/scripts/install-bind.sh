@@ -18,7 +18,7 @@ sed -i 's/{_internalzonename_}/$internalzonename/g' named.conf.local
 cp named.conf.local /etc/bind/named.conf.local
 
 # Replace /etc/bind/zones/{internalzonename}.db
-mkdir /etc/bind/zones
+mkdir -p /etc/bind/zones
 sed -i "s/{_internalzonename_}/$internalzonename/g" zone.db
 sed -i "s/{_aseinternalip_}/$aseinternalip/g" zone.db
 sed -i "s/{_bindinternalip_}/$bindinternalip/g" zone.db
