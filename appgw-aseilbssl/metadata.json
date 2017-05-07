@@ -1,7 +1,7 @@
 {
   "itemDisplayName": "ASE (ILB) + SSL with Application Gateway",
-  "description": "App Service Environment with an Internal Load Balancer and (optional) End-to-End SSL behind an Application Gateway",
-  "summary": "App Service Environment with an Internal Load Balancer and (optional) End-to-End SSL behind an Application Gateway",
+  "description": "App Service Environment with an Internal Load Balancer and End-to-End SSL behind an Application Gateway",
+  "summary": "App Service Environment with an Internal Load Balancer and End-to-End SSL behind an Application Gateway",
   "githubUsername": "sabbour",
-  "dateUpdated": "2017-04-17"
+  "dateUpdated": "2017-05-07"
 }

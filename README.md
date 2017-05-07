@@ -9,7 +9,7 @@
 
 This template deploys an **App Service Environment + Application Gateway with End-to-End SSL**.
 
-`Tags: Application Gateway, App Service Environment`
+`Tags: Application Gateway, App Service Environment, Web Application Firewall, Web Apps`
 
 ## Solution overview and deployed resources
 
@@ -33,7 +33,9 @@ Note that in the context below, **internal.domain.com** refers to the App Servic
 + scm.internal.domain.com
 
 You can use the PowerShell scripts below to convert the PFX (with private key) and CER (without private key) to Base64 text to add to the parameters.
+You'll find them in text files after you run the script.
 
++ Export PFX with private key and the certificate thumbprint
 ```PowerShell
 $SecurePassword = Read-Host -AsSecureString  "Enter Certificate password"
 $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($SecurePassword)
@@ -43,6 +45,7 @@ $cert = New-Object System.Security.Cryptography.X509Certificates.X509Certificate
 [System.Convert]::ToBase64String($cert.Thumbprint) | Out-File "certificate.pfx_thumbprint.txt"
 ```
 
++ Export CER without private key
 ```PowerShell
 $cer = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2
 $cer.Import("certificate.cer")
@@ -65,6 +68,18 @@ $bin = $cer.GetRawCertData()
 ![ARM deployment outputs](images/arm-deploymentoutputs.png)
 ![Nameserver setup](images/domain-nameservers.png)
 
-+ After DNS propagates, open http://yourappname.domain.com and https://yourappname.domain.com, both should work and the latter should be using End-to-End SSL. Note that the **REMOTE_ADDR** is actually the IP of the Application Gateway.
++ You can optionally enable the Web Application Firewall mode on the Application Gateway
+
+## Connecting to your App Service Environment
++ Once the environment is ready and the DNS propagates, open http://yourappname.domain.com and https://yourappname.domain.com, both should work and the latter should be using End-to-End SSL. Note that the **REMOTE_ADDR** is actually the IP of the Application Gateway.
 ![http-webapp1](images/http-webapp1.png)
 ![https-webapp1](images/https-webapp1.png)
+
++ To access the Kudu console or FTP, they should be at the following endpoints
+++ Kudu: yourappname.scm.internal.domain.com
+++ FTP: ftp.internal.domain.com
+
++ Since the ASE is running behind an Internal Load Balancer, you can't access the endpoints above from outside the Virtual Network. You can either:
+++ Create a "jump box" Virtual Machine inside the Virtual Network and use it to access those endpoints
+++ Setup a Point-to-Site VPN connection to the Virtual Network and use it to get onto the network. More details here: https://docs.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-howto-point-to-site-resource-manager-portal
+++ Setup a Site-to-Site/Express Route connection to the Virtual Network and use it to get onto the network. More details here: https://docs.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-howto-site-to-site-resource-manager-portal
