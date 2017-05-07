@@ -27,6 +27,7 @@
   <ItemGroup>
     <Content Include="azuredeploy.json" />
     <None Include="appgw-aseilbssl.sln" />
+    <None Include="azuredeploy.local.parameters.json" />
     <None Include="azuredeploy.parameters.json" />
     <None Include="Deployment.targets">
       <Visible>False</Visible>

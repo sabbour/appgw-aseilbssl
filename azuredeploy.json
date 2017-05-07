@@ -224,7 +224,7 @@
     },
     "scriptsLocation": {
       "type": "string",
-      "defaultValue": "https://raw.githubusercontent.com/sabbour/appgw-aseilbssl/master/appgw-aseilbssl",
+      "defaultValue": "https://raw.githubusercontent.com/sabbour/appgw-aseilbssl/master",
       "metadata": {
         "description": "Container in staging storage account to receive post-build staging folder upload"
       }
