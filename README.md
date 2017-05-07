@@ -76,10 +76,10 @@ $bin = $cer.GetRawCertData()
 ![https-webapp1](images/https-webapp1.png)
 
 + To access the Kudu console or FTP, they should be at the following endpoints
-++ Kudu: yourappname.scm.internal.domain.com
-++ FTP: ftp.internal.domain.com
+   + Kudu: yourappname.scm.internal.domain.com
+   + FTP: ftp.internal.domain.com
 
 + Since the ASE is running behind an Internal Load Balancer, you can't access the endpoints above from outside the Virtual Network. You can either:
-++ Create a "jump box" Virtual Machine inside the Virtual Network and use it to access those endpoints
-++ Setup a Point-to-Site VPN connection to the Virtual Network and use it to get onto the network. More details here: https://docs.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-howto-point-to-site-resource-manager-portal
-++ Setup a Site-to-Site/Express Route connection to the Virtual Network and use it to get onto the network. More details here: https://docs.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-howto-site-to-site-resource-manager-portal
+   + Create a "jump box" Virtual Machine inside the Virtual Network and use it to access those endpoints
+   + Setup a Point-to-Site VPN connection to the Virtual Network and use it to get onto the network. More details here: https://docs.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-howto-point-to-site-resource-manager-portal
+   + Setup a Site-to-Site/Express Route connection to the Virtual Network and use it to get onto the network. More details here: https://docs.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-howto-site-to-site-resource-manager-portal
