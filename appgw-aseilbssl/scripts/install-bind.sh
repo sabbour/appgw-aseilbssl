@@ -40,3 +40,6 @@ cp /etc/resolv.conf.bak /etc/resolv.conf && rm /etc/resolv.conf.bak
 # Restart bind
 echo "Restart BIND"
 service bind9 restart
+
+# Check the configuration (will output in console)
+named-checkzone ${internalzonename} /etc/bind/zones/${internalzonename}.db

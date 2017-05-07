@@ -4,7 +4,7 @@
                                          1H      ; retry
                                          1W      ; expire
                                          3H )    ; minimum
-
+$TTL    3600
 @       NS      ns1.{_internalzonename_}.
 ns1     IN      A       {_bindinternalip_}
 *       IN      A       {_aseinternalip_}
