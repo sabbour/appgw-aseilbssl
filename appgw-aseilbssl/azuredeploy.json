@@ -235,7 +235,6 @@
     "appgwName": "appgw",
     "bindVMName": "appgw-bind",
     "appgwPublicIpName": "appgw-publicip",
-    "bindPublicIpName": "appgw-bind-publicip",
     "bindNSGName": "appgw-bind-nsg",
     "appgwSubnetName": "appgw-subnet",
     "dnsSubnetName": "dns-subnet",
@@ -765,35 +764,10 @@
         "displayName": "BIND DNS Network Security Group"
       },
       "properties": {
-        "securityRules": [
-          {
-            "name": "default-allow-ssh",
-            "properties": {
-              "protocol": "TCP",
-              "sourcePortRange": "*",
-              "destinationPortRange": "22",
-              "sourceAddressPrefix": "*",
-              "destinationAddressPrefix": "*",
-              "access": "Allow",
-              "priority": 1000,
-              "direction": "Inbound"
-            }
-          }
+        "securityRules": [          
         ]
       },
       "dependsOn": []
-    },
-    {
-      "apiVersion": "[variables('apiVersion')]",
-      "type": "Microsoft.Network/publicIPAddresses",
-      "name": "[variables('bindPublicIpName')]",
-      "location": "[resourceGroup().location]",
-      "properties": {
-        "publicIPAllocationMethod": "Dynamic"
-      },
-      "tags": {
-        "displayName": "Public IP Address for BIND DNS"
-      }
     },
     {
       "name": "[variables('bindNicName')]",
@@ -813,9 +787,6 @@
             "name": "ipconfig1",
             "properties": {
               "privateIPAllocationMethod": "Static",
-              "publicIPAddress": {
-                "id": "[resourceId('Microsoft.Network/publicIPAddresses/',variables('bindPublicIpName'))]"
-              },
               "privateIpAddress": "[variables('bindIP')]",
               "subnet": {
                 "id": "[variables('dnsSubnetRef')]"

@@ -42,7 +42,7 @@ chown bind:bind /etc/bind/zones/${internalzonename}.db
 
 # Restore /etc/resolv.conf
 echo "Restore /etc/resolv.conf and setting DNS to $bindinternalip"
-cp /etc/resolv.conf.bak /etc/resolv.conf && rm /etc/resolv.conf.bak
+cp /etc/resolv.conf.bak /etc/resolv.conf
 
 
 # Check the configuration (will output errors in console)
