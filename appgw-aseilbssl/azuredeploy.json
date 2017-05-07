@@ -748,7 +748,7 @@
                 "[concat(parameters('scriptsLocation'), '/scripts/resolv.conf')]",
                 "[concat(parameters('scriptsLocation'), '/scripts/zone.db')]"
               ],
-              "commandToExecute": "[concat('sh install-bind.sh ', parameters('aseDNSSuffix'), ' ', parameters('aseVirtualIp'), ' ', variables('bindIP'))]",
+              "commandToExecute": "[concat('sh install-bind.sh ', parameters('aseDNSSuffix'), ' ', parameters('aseVirtualIp'), ' ', variables('bindIP'), ' ', parameters('customScriptTimestamp'))]",
               "timestamp": "[parameters('customScriptTimestamp')]"
             }
           }

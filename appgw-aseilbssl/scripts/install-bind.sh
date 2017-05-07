@@ -19,7 +19,7 @@ cp named.conf.options /etc/bind/named.conf.options
 
 # Replace /etc/bind/named.conf.local which will now load the zone file from /etc/bind/zones/{internalzonename}.db
 echo "Override named.conf.local to load zone file from/etc/bind/zones/$internalzonename.db and string replace {_internalzonename_} with $internalzonename"
-sed -i 's/{_internalzonename_}/$internalzonename/g' named.conf.local
+sed -i "s/{_internalzonename_}/$internalzonename/g" named.conf.local
 cp named.conf.local /etc/bind/named.conf.local
 
 # Replace /etc/bind/zones/{internalzonename}.db
