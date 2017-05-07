@@ -4,6 +4,8 @@ aseinternalip=$2
 bindinternalip=$3
 timestamp=$(date +%s)
 
+echo "Executing at $timestamp"
+
 # Replace /etc/resolv.conf with our resolv.conf to temporarily change the DNS to 8.8.8.8
 echo 'Temporarily overriding DNS to be 8.8.8.8'
 cp /etc/resolv.conf /etc/resolv.conf.bak
@@ -34,6 +36,9 @@ sed -i "s/{_timestamp_}/$timestamp/g" zone.db
 
 echo "Override /etc/bind/zones/$internalzonename"
 cp zone.db /etc/bind/zones/${internalzonename}.db
+
+echo "Making sure BIND has permissions to read the zone file"
+chown bind:bind /etc/bind/zones/${internalzonename}.db
 
 # Restore /etc/resolv.conf
 echo "Restore /etc/resolv.conf and setting DNS to $bindinternalip"
