@@ -2,6 +2,7 @@
   "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
+
     "aseLocation": {
       "type": "string",
       "allowedValues": [
@@ -31,99 +32,49 @@
         "description": "Location of the App Service Environment. This is a workaround because ASE doesn't like the normalized (ie: westeurope) naming now. Obviously, has to be the same location as your Resource Group."
       }
     },
-    "appgwSkuName": {
+    "vnetAddressPrefix": {
       "type": "string",
-      "allowedValues": [
-        "Standard_Small",
-        "Standard_Medium",
-        "Standard_Large"
-      ],
-      "defaultValue": "Standard_Medium",
+      "defaultValue": "10.0.0.0/16",
       "metadata": {
-        "description": "The SKU of the Application Gateway."
+        "description": "The Virtual Network address prefix."
       }
     },
-    "appgwCapacity": {
-      "type": "int",
-      "defaultValue": 2,
-      "metadata": {
-        "description": "The number of instances running in the Application Gateway"
-      }
-    },
-    "aseDNSSuffix": {
+    "appgwSubnetPrefix": {
       "type": "string",
-      "defaultValue": "corp.internal",
+      "defaultValue": "10.0.1.0/24",
       "metadata": {
-        "description": "The subdomain of the App Service Environment. This doesn't need to be a real domain."
+        "description": "The Application Gateway subnet."
       }
     },
-
+    "dnsSubnetPrefix": {
+      "type": "string",
+      "defaultValue": "10.0.2.0/24",
+      "metadata": {
+        "description": "The DNS subnet."
+      }
+    },
+    "aseSubnetPrefix": {
+      "type": "string",
+      "defaultValue": "10.0.3.0/24",
+      "metadata": {
+        "description": "The App Service Environment subnet."
+      }
+    },
+    "bindIp": {
+      "type": "string",
+      "defaultValue": "10.0.2.50",
+      "metadata": {
+        "description": "The Private Static IP that will be allocated to BIND (DNS) server. This will be set as your Virtual Network's DNS server."
+      }
+    },
     "aseVirtualIp": {
       "type": "string",
       "defaultValue": "10.0.3.9",
       "metadata": {
-        "description": "The Virtual IP of the App Service Environment's Internal Load Balancer. There is no easy way to obtain it post deployment, hence it is here."
+        "description": "The Virtual IP of the App Service Environment's Internal Load Balancer. There is no easy way to obtain it post deployment, hence it is here. You may need to re-run the deployment after it is done to update this value."
       }
     },
-    "customScriptTimestamp": {
-      "type": "int",
-      "defaultValue": 1,
-      "metadata": {
-        "description": "Timestamp sent to the CustomScript extension. If you need to run the script again, you need to change this value when running the template."
-      }
-    },
-    "appName": {
-      "type": "string",
-      "defaultValue": "webapp1",
-      "metadata": {
-        "description": "The name of the app to be deployed. This will be prepended to the App Service Environment subdomain to create the app's hostname."
-      }
-    },
-    "rootZoneName": {
-      "type": "string",
-      "defaultValue": "yourdomain.com",
-      "metadata": {
-        "description": "The public hostname of the app to be deployed. Make sure that your SSL certificate works for this and that you can manage this domain's DNS."
-      }
-    },
-    "externalAppHostname": {
-      "type": "string",
-      "defaultValue": "webapp1.yourdomain.com",
-      "metadata": {
-        "description": "The public hostname of the app to be deployed. Make sure that your SSL certificate works for this and that you can manage this domain's DNS."
-      }
-    },
-    "pfxBase64": {
-      "type": "string",
-      "metadata": {
-        "description": "A pfx file encoded as a base-64 string.  The pfx contains the SSL certificate that will be configured as the default SSL certificate for the ASE and the AppGW for end-to-end SSL."
-      }
-    },
-    "pfxThumbprint": {
-      "type": "string",
-      "metadata": {
-        "description": "The hexadecimal certificate thumbprint of the certificate contained in pfxBase64.  All spaces need to be removed from the hex string."
-      }
-    },
-    "pfxPassword": {
-      "type": "securestring",
-      "metadata": {
-        "description": "The password of the .pfx certificate"
-      }
-    },
-    "cerBase64": {
-      "type": "string",
-      "metadata": {
-        "description": "The Base64 encoded string of your .cer certificate. That's the public part of your SSL certificate. You may use the DigiCert Certificate Utility https://www.digicert.com/util/pfx-certificate-management-utility-import-export-instructions.htm"
-      }
-    },
-    "appPlanName": {
-      "type": "string",
-      "defaultValue": "appgw-ase-plan",
-      "metadata": {
-        "description": "Name of the App Service Plan"
-      }
-    },
+
     "aseName": {
       "type": "string",
       "defaultValue": "appgw-ase",
@@ -210,6 +161,88 @@
         "description": "Number of instances in worker pool three.  Can be zero if not using worker pool three."
       }
     },
+
+    "appPlanName": {
+      "type": "string",
+      "defaultValue": "appgw-ase-plan",
+      "metadata": {
+        "description": "Name of the App Service Plan"
+      }
+    },
+    "appName": {
+      "type": "string",
+      "defaultValue": "webapp1",
+      "metadata": {
+        "description": "The name of the app to be deployed. This will be prepended to the App Service Environment subdomain to create the app's hostname."
+      }
+    },
+    "aseDNSSuffix": {
+      "type": "string",
+      "defaultValue": "internal.domain.com",
+      "metadata": {
+        "description": "The subdomain of the App Service Environment. This doesn't need to be a real domain."
+      }
+    },
+    "rootZoneName": {
+      "type": "string",
+      "defaultValue": "domain.com",
+      "metadata": {
+        "description": "The public hostname of the app to be deployed. Make sure that your SSL certificate works for this and that you can manage this domain's DNS."
+      }
+    },
+    "externalAppHostname": {
+      "type": "string",
+      "defaultValue": "webapp1.domain.com",
+      "metadata": {
+        "description": "The public hostname of the app to be deployed. Make sure that your SSL certificate works for this and that you can manage this domain's DNS."
+      }
+    },
+
+    "appgwSkuName": {
+      "type": "string",
+      "allowedValues": [
+        "Standard_Small",
+        "Standard_Medium",
+        "Standard_Large"
+      ],
+      "defaultValue": "Standard_Medium",
+      "metadata": {
+        "description": "The SKU of the Application Gateway."
+      }
+    },
+    "appgwCapacity": {
+      "type": "int",
+      "defaultValue": 2,
+      "metadata": {
+        "description": "The number of instances running in the Application Gateway"
+      }
+    },
+
+    "pfxBase64": {
+      "type": "string",
+      "metadata": {
+        "description": "A pfx file encoded as a base-64 string.  The pfx contains the SSL certificate that will be configured as the default SSL certificate for the ASE and the AppGW for end-to-end SSL."
+      }
+    },
+    "pfxThumbprint": {
+      "type": "string",
+      "metadata": {
+        "description": "The hexadecimal certificate thumbprint of the certificate contained in pfxBase64.  All spaces need to be removed from the hex string."
+      }
+    },
+    "pfxPassword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "The password of the .pfx certificate"
+      }
+    },
+    "cerBase64": {
+      "type": "string",
+      "metadata": {
+        "description": "The Base64 encoded string of your .cer certificate. That's the public part of your SSL certificate. You may use the DigiCert Certificate Utility https://www.digicert.com/util/pfx-certificate-management-utility-import-export-instructions.htm"
+      }
+    },
+
     "bindUsername": {
       "type": "string",
       "metadata": {
@@ -228,6 +261,13 @@
       "metadata": {
         "description": "Container in staging storage account to receive post-build staging folder upload"
       }
+    },
+    "customScriptTimestamp": {
+      "type": "int",
+      "defaultValue": 1,
+      "metadata": {
+        "description": "Timestamp sent to the CustomScript extension. If you need to run the script again, you need to change this value when running the template."
+      }
     }
   },
   "variables": {
@@ -239,11 +279,6 @@
     "appgwSubnetName": "appgw-subnet",
     "dnsSubnetName": "dns-subnet",
     "aseSubnetName": "ase-subnet",
-    "vnetAddressPrefix": "10.0.0.0/16",
-    "appgwSubnetPrefix": "10.0.1.0/24",
-    "dnsSubnetPrefix": "10.0.2.0/24",
-    "aseSubnetPrefix": "10.0.3.0/24",
-    "bindIP": "10.0.2.50",
     "certificateName": "[concat(parameters('pfxThumbprint'),'_',parameters('aseName'),'_InternalLoadBalancingASE')]",
     "backendFQDN": "[concat(parameters('appName'),'.',parameters('aseDNSSuffix'))]",
     "apiVersion": "2017-03-01",
@@ -276,29 +311,29 @@
       "properties": {
         "addressSpace": {
           "addressPrefixes": [
-            "[variables('vnetAddressPrefix')]"
+            "[parameters('vnetAddressPrefix')]"
           ]
         },
         "dhcpOptions": {
-          "dnsServers": [ "10.0.2.50" ]
+          "dnsServers": ["[parameters('bindIp')]"]
         },
         "subnets": [
           {
             "name": "[variables('appgwSubnetName')]",
             "properties": {
-              "addressPrefix": "[variables('appgwSubnetPrefix')]"
+              "addressPrefix": "[parameters('appgwSubnetPrefix')]"
             }
           },
           {
             "name": "[variables('dnsSubnetName')]",
             "properties": {
-              "addressPrefix": "[variables('dnsSubnetPrefix')]"
+              "addressPrefix": "[parameters('dnsSubnetPrefix')]"
             }
           },
           {
             "name": "[variables('aseSubnetName')]",
             "properties": {
-              "addressPrefix": "[variables('aseSubnetPrefix')]"
+              "addressPrefix": "[parameters('aseSubnetPrefix')]"
             }
           }
         ]
@@ -747,7 +782,7 @@
                 "[concat(parameters('scriptsLocation'), '/scripts/resolv.conf')]",
                 "[concat(parameters('scriptsLocation'), '/scripts/zone.db')]"
               ],
-              "commandToExecute": "[concat('sh install-bind.sh ', parameters('aseDNSSuffix'), ' ', parameters('aseVirtualIp'), ' ', variables('bindIP'))]",
+              "commandToExecute": "[concat('sh install-bind.sh ', parameters('aseDNSSuffix'), ' ', parameters('aseVirtualIp'), ' ', parameters('bindIP'))]",
               "timestamp": "[parameters('customScriptTimestamp')]"
             }
           }
@@ -787,7 +822,7 @@
             "name": "ipconfig1",
             "properties": {
               "privateIPAllocationMethod": "Static",
-              "privateIpAddress": "[variables('bindIP')]",
+              "privateIpAddress": "[parameters('bindIP')]",
               "subnet": {
                 "id": "[variables('dnsSubnetRef')]"
               },
