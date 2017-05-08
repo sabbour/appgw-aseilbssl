@@ -710,7 +710,8 @@
       },
       "dependsOn": [
         "[resourceId('Microsoft.Network/dnszones', parameters('rootZoneName'))]",
-        "[resourceId('Microsoft.Network/publicIPAddresses', variables('appgwPublicIpName'))]"
+        "[resourceId('Microsoft.Network/publicIPAddresses', variables('appgwPublicIpName'))]",
+        "[resourceId('Microsoft.Network/applicationGateways',variables('appgwName'))]"
       ]
     },
     {
