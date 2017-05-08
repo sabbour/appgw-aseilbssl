@@ -564,7 +564,8 @@
       },
       "dependsOn": [
         "[concat('Microsoft.Network/virtualNetworks/', variables('vnetName'))]",
-        "[concat('Microsoft.Compute/virtualMachines/', variables('bindVMName'))]"
+        "[concat('Microsoft.Compute/virtualMachines/', variables('bindVMName'))]",
+        "[concat('Microsoft.Compute/virtualMachines/', variables('bindVMName'), '/extensions/SetupBindCustomScript')]"
       ],
       "properties": {
         "name": "[parameters('aseName')]",
