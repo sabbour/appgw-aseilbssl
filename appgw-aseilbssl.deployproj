@@ -34,7 +34,7 @@
     </None>
     <Content Include="Deploy-AzureResourceGroup.ps1" />
     <None Include="images\appgw-backendpool.png" />
-    <None Include="images\architecture.png" />
+    <None Include="images\architecture1.png" />
     <None Include="images\arm-deploymentoutputs.png" />
     <None Include="images\ase-virtualip.png" />
     <None Include="images\customtemplate.png" />
