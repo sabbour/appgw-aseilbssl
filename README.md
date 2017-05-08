@@ -13,7 +13,7 @@ This template deploys an **App Service Environment + Application Gateway with En
 
 ## Solution overview and deployed resources
 
-![Solution overview](images/architecture.png)
+![Solution overview](images/architecture1.png)
 
 Note that this template assumes you will use Azure DNS to host your DNS. If you opt to host your domains elsewhere, please fork the template and comment out the relevant Azure DNS sections.
 
