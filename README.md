@@ -57,6 +57,9 @@ $bin = $cer.GetRawCertData()
 
 + You can click the "Deploy to Azure" button at the beginning of this document.
 + Supply the correct parameters for the certificates
++ This will take about 2-hours to deploy
+
+![Custom Deployment](images/customtemplate.png)
 
 ## Post deployment
 
