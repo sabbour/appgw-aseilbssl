@@ -315,7 +315,7 @@
           ]
         },
         "dhcpOptions": {
-          "dnsServers": ["[parameters('bindIp')]"]
+          "dnsServers": [ "[parameters('bindIp')]" ]
         },
         "subnets": [
           {
@@ -337,6 +337,23 @@
             }
           }
         ]
+      }
+    },
+    {
+      "apiVersion": "[variables('apiVersion')]",
+      "type": "Microsoft.Network/virtualNetworks",
+      "name": "[variables('vnetName')]",
+      "location": "[resourceGroup().location]",
+      "tags": {
+        "displayName": "Virtual Network - DNS setup"
+      },
+      "dependsOn": [
+        "[concat('Microsoft.Compute/virtualMachines/', variables('bindVMName'), '/extensions/SetupBindCustomScript')]"
+      ],
+      "properties": {       
+        "dhcpOptions": {
+          "dnsServers": [ "[parameters('bindIp')]" ]
+        }
       }
     },
     {
@@ -713,6 +730,7 @@
         "[resourceId('Microsoft.Network/dnszones', parameters('rootZoneName'))]",
         "[resourceId('Microsoft.Network/publicIPAddresses', variables('appgwPublicIpName'))]",
         "[resourceId('Microsoft.Network/applicationGateways',variables('appgwName'))]"
+        "[resourceId('Microsoft.Network/applicationGateways',variables('appgwName'))]"
       ]
     },
     {
@@ -801,7 +819,7 @@
         "displayName": "BIND DNS Network Security Group"
       },
       "properties": {
-        "securityRules": [          
+        "securityRules": [
         ]
       },
       "dependsOn": []

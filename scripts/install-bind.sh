@@ -7,9 +7,9 @@ timestamp=$(date +%s)
 echo "Executing at $timestamp"
 
 # Replace /etc/resolv.conf with our resolv.conf to temporarily change the DNS to 8.8.8.8
-echo 'Temporarily overriding DNS to be 8.8.8.8'
-cp /etc/resolv.conf /etc/resolv.conf.bak
-cp resolv.conf /etc/resolv.conf
+#echo 'Temporarily overriding DNS to be 8.8.8.8'
+#cp /etc/resolv.conf /etc/resolv.conf.bak
+#cp resolv.conf /etc/resolv.conf
 
 # Run apt-get update and install bind
 echo 'Updating apt-get and installing BIND'
@@ -41,8 +41,8 @@ echo "Making sure BIND has permissions to read the zone file"
 chown bind:bind /etc/bind/zones/${internalzonename}.db
 
 # Restore /etc/resolv.conf
-echo "Restore /etc/resolv.conf and setting DNS to $bindinternalip"
-cp /etc/resolv.conf.bak /etc/resolv.conf
+#echo "Restore /etc/resolv.conf and setting DNS to $bindinternalip"
+#cp /etc/resolv.conf.bak /etc/resolv.conf
 
 
 # Check the configuration (will output errors in console)
