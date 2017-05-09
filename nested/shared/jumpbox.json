@@ -24,7 +24,7 @@
     "vmNicName": "[concat(parameters('vmName'), '-nic')]",
     "vmNSGName": "[concat(parameters('vmName'), '-nsg')]",
     "vmIPName": "[concat(parameters('vmName'), '-ip')]",
-    "bindOSDiskName": "[concat(parameters('vmName'), '-osdisk')]"
+    "vmOSDiskName": "[concat(parameters('vmName'), '-osdisk')]"
   },
   "resources": [
     {

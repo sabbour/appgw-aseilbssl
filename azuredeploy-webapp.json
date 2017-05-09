@@ -1,0 +1,204 @@
+﻿{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "aseName": {
+      "type": "string",
+      "defaultValue": "appgw-ase",
+      "metadata": {
+        "description": "Name of the App Service Environment. Has to be unique within the region."
+      }
+    },
+    "aseVirtualIp": {
+      "type": "string",
+      "defaultValue": "10.0.3.9",
+      "metadata": {
+        "description": "The Virtual IP of the App Service Environment's Internal Load Balancer. There is no easy way to obtain it post deployment, hence it is here. You may need to re-run the deployment after it is done to update this value."
+      }
+    },
+    "appPlanName": {
+      "type": "string",
+      "defaultValue": "appgw-ase-plan",
+      "metadata": {
+        "description": "Name of the App Service Plan"
+      }
+    },
+    "appName": {
+      "type": "string",
+      "defaultValue": "webapp1",
+      "metadata": {
+        "description": "The name of the app to be deployed. This will be prepended to the App Service Environment subdomain to create the app's hostname."
+      }
+    },
+    "aseDNSSuffix": {
+      "type": "string",
+      "defaultValue": "internal.domain.com",
+      "metadata": {
+        "description": "The subdomain of the App Service Environment. This doesn't need to be a real domain."
+      }
+    },
+    "rootZoneName": {
+      "type": "string",
+      "defaultValue": "domain.com",
+      "metadata": {
+        "description": "The public hostname of the app to be deployed. Make sure that your SSL certificate works for this and that you can manage this domain's DNS."
+      }
+    },
+    "externalAppHostname": {
+      "type": "string",
+      "defaultValue": "webapp1.domain.com",
+      "metadata": {
+        "description": "The public hostname of the app to be deployed. Make sure that your SSL certificate works for this and that you can manage this domain's DNS."
+      }
+    },
+    "appgwSkuName": {
+      "type": "string",
+      "allowedValues": [
+        "Standard_Small",
+        "Standard_Medium",
+        "Standard_Large"
+      ],
+      "defaultValue": "Standard_Medium",
+      "metadata": {
+        "description": "The SKU of the Application Gateway."
+      }
+    },
+    "appgwCapacity": {
+      "type": "int",
+      "defaultValue": 2,
+      "metadata": {
+        "description": "The number of instances running in the Application Gateway"
+      }
+    },
+    "appgwPfxBase64": {
+      "type": "string",
+      "metadata": {
+        "description": "The Application Gateway pfx file encoded as a base-64 string.  The pfx contains the SSL certificate that will be configured as the SSL certificate for the AppGW for end-to-end SSL."
+      }
+    },
+    "appgwPfxThumbprint": {
+      "type": "string",
+      "metadata": {
+        "description": "The Application Gateway hexadecimal certificate thumbprint of the certificate contained in appgwPfxBase64.  All spaces need to be removed from the hex string."
+      }
+    },
+    "appgwPfxPassword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "The password of the Application Gateway .pfx certificate."
+      }
+    },
+
+    "aseILBPfxBase64": {
+      "type": "string",
+      "metadata": {
+        "description": "The App Service Environment pfx file encoded as a base-64 string.  The pfx contains the SSL certificate that will be configured as the SSL certificate for the ILB of the ASE."
+      }
+    },
+    "aseILBCerBase64": {
+      "type": "string",
+      "metadata": {
+        "description": "The App Service Environment cer file encoded as a base-64 string. This will be used to whitelist the ASE with the AppGW and encrypt the backend communication."
+      }
+    },
+    "aseILBPfxThumbprint": {
+      "type": "string",
+      "metadata": {
+        "description": "The App Service Environment  hexadecimal certificate thumbprint of the certificate contained in aseILBPfxBase64.  All spaces need to be removed from the hex string."
+      }
+    },
+    "aseILBPfxPassword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "The password of the App Service Environment .pfx certificate"
+      }
+    },
+    "repositoryLocation": {
+      "type": "string",
+      "defaultValue": "https://raw.githubusercontent.com/sabbour/appgw-aseilbssl/master",
+      "metadata": {
+        "description": "Container in staging storage account to receive post-build staging folder upload"
+      }
+    }
+  },
+  "variables": {
+    "vnetName": "appgw-vnet",
+    "appgwName": "appgw",
+    "bindVMName": "appgw-bind",
+    "jumpBoxVMName": "appgw-jumpbox",
+    "appgwPublicIpName": "appgw-publicip",
+    "bindNSGName": "appgw-bind-nsg",
+    "appgwSubnetName": "appgw-subnet",
+    "dnsSubnetName": "dns-subnet",
+    "aseSubnetName": "ase-subnet",
+    "backendFQDN": "[concat(parameters('appName'),'.',parameters('aseDNSSuffix'))]",
+    "apiVersion": "2017-03-01",
+    "vnetRef": "[resourceId('Microsoft.Network/virtualNetworks/',variables('vnetName'))]",
+    "appgwSubnetRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets',variables('vnetName'),variables('appgwSubnetName'))]",
+    "dnsSubnetRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets',variables('vnetName'), variables('dnsSubnetName'))]",
+    "appgwPublicIPRef": "[resourceId('Microsoft.Network/publicIPAddresses',variables('appgwPublicIpName'))]",
+    "applicationGatewayRef": "[resourceId('Microsoft.Network/applicationGateways',variables('appgwName'))]",
+    "aseRef": "[resourceId('Microsoft.Web/hostingEnvironments',parameters('aseName'))]",
+    "appPlanRef": "[resourceId('Microsoft.Web/serverFarms',parameters('appPlanName'))]"
+  },
+  "resources": [
+    {
+      "name": "create-appgwandwebappssl",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2015-01-01",
+      "dependsOn": [
+        "create-appplan"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('repositoryLocation'), '/nested/member/', 'appgw-webappssl.json')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "appgwName": {
+            "value": "[variables('appgwName')]"
+          },
+          "aseVirtualIp": {
+            "value": "[parameters('aseVirtualIp')]"
+          },
+          "aseName": {
+            "value": "[parameters('aseName')]"
+          },
+          "vnetName": {
+            "value": "[variables('vnetName')]"
+          },
+          "externalAppHostname": {
+            "value": "[parameters('externalAppHostname')]"
+          },
+          "appgwSkuName": {
+            "value": "[parameters('appgwSkuName')]"
+          },
+          "appgwCapacity": {
+            "value": "[parameters('appgwCapacity')]"
+          },
+          "appgwSubnetRef": {
+            "value": "[variables('appgwSubnetRef')]"
+          },
+          "pfxBase64": {
+            "value": "[parameters('appgwPfxBase64')]"
+          },
+          "cerBase64": {
+            "value": "[parameters('aseILBCerBase64')]"
+          },
+          "pfxPassword": {
+            "value": "[parameters('appgwPfxPassword')]"
+          },
+          "pfxThumbprint": {
+            "value": "[parameters('appgwPfxThumbprint')]"
+          },
+          "appgwPublicIPRef": {
+            "value": "[variables('appgwPublicIPRef')]"
+          }
+        }
+      }
+    }
+  ],
+  "outputs": {
+  }
+}

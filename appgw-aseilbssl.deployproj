@@ -28,6 +28,7 @@
     <Content Include="azuredeploy.json" />
     <None Include="appgw-aseilbssl.sln" />
     <None Include="azuredeploy-template.json" />
+    <None Include="azuredeploy-webapp.json" />
     <None Include="azuredeploy.local.parameters.json" />
     <None Include="azuredeploy.parameters.json" />
     <None Include="Deployment.targets">
@@ -47,10 +48,9 @@
     <None Include="LICENSE" />
     <None Include="metadata.json" />
     <None Include="index.php" />
-    <None Include="nested\member\webappwithssl.json" />
+    <None Include="nested\member\appgw-webappssl.json" />
     <None Include="nested\shared\appplan.json" />
     <None Include="nested\shared\jumpbox.json" />
-    <None Include="nested\shared\appgw.json" />
     <None Include="nested\shared\ase.json" />
     <None Include="nested\shared\dnszone.json" />
     <None Include="nested\shared\binddns.json" />

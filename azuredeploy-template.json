@@ -77,7 +77,7 @@
       "type": "string",
       "defaultValue": "appgw-ase",
       "metadata": {
-        "description": "Name of the App Service Environment"
+        "description": "Name of the App Service Environment. Has to be unique within the region."
       }
     },
     "aseFrontEndSize": {
@@ -234,6 +234,7 @@
         "description": "The password of the Application Gateway .pfx certificate."
       }
     },
+
     "aseILBPfxBase64": {
       "type": "string",
       "metadata": {
@@ -550,59 +551,6 @@
           },
           "pfxThumbprint": {
             "value": "[parameters('aseILBPfxThumbprint')]"
-          }
-        }
-      }
-    },
-    {
-      "name": "create-appgw",
-      "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2015-01-01",
-      "dependsOn": [
-        "create-ase"
-      ],
-      "properties": {
-        "mode": "Incremental",
-        "templateLink": {
-          "uri": "[concat(parameters('repositoryLocation'), '/nested/shared/', 'appgw.json')]",
-          "contentVersion": "1.0.0.0"
-        },
-        "parameters": {
-          "appgwName": {
-            "value": "[variables('appgwName')]"
-          },
-          "aseVirtualIp": {
-            "value": "[parameters('aseVirtualIp')]"
-          },
-          "aseName": {
-            "value": "[parameters('aseName')]"
-          },
-          "vnetName": {
-            "value": "[variables('vnetName')]"
-          },
-          "externalAppHostname": {
-            "value": "[parameters('externalAppHostname')]"
-          },
-          "appgwSkuName": {
-            "value": "[parameters('appgwSkuName')]"
-          },
-          "appgwCapacity": {
-            "value": "[parameters('appgwCapacity')]"
-          },
-          "appgwSubnetRef": {
-            "value": "[variables('appgwSubnetRef')]"
-          },
-          "pfxBase64": {
-            "value": "[parameters('appgwPfxBase64')]"
-          },
-          "pfxPassword": {
-            "value": "[parameters('appgwPfxPassword')]"
-          },
-          "pfxThumbprint": {
-            "value": "[parameters('appgwPfxThumbprint')]"
-          },
-          "appgwPublicIPRef": {
-            "value": "[variables('appgwPublicIPRef')]"
           }
         }
       }
