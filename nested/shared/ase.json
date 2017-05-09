@@ -1,12 +1,99 @@
 ﻿{
-    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
-    "contentVersion": "1.0.0.0",
-    "parameters": {
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "aseLocation": {
+      "type": "string"
     },
-    "variables": {
+    "aseName": {
+      "type": "string"
     },
-    "resources": [
-    ],
-    "outputs": {
+    "aseFrontEndSize": {
+      "type": "string"
+    },
+    "aseFrontEndCount": {
+      "type": "int"
+    },
+    "aseWorkerPoolOneInstanceSize": {
+      "type": "string"
+    },
+    "aseWorkerPoolOneInstanceCount": {
+      "type": "int"
+    },
+    "aseWorkerPoolTwoInstanceSize": {
+      "type": "string"
+    },
+    "aseWorkerPoolTwoInstanceCount": {
+      "type": "int"
+    },
+    "aseWorkerPoolThreeInstanceSize": {
+      "type": "string"
+    },
+    "aseWorkerPoolThreeInstanceCount": {
+      "type": "int"
+    },
+    "aseDNSSuffix": {
+      "type": "string"
+    },
+    "vnetRef": {
+      "type": "string"
+    },
+    "aseSubnetName": {
+      "type": "string"
+    },
+    "pfxThumbprint": {
+      "type": "string"
     }
+  },
+  "variables": {
+  },
+  "resources": [
+    {
+      "apiVersion": "2016-03-01",
+      "type": "Microsoft.Web/hostingEnvironments",
+      "name": "[parameters('aseName')]",
+      "location": "[parameters('aseLocation')]",
+      "tags": {
+        "displayName": "App Service Environment"
+      },
+      "properties": {
+        "name": "[parameters('aseName')]",
+        "location": "[parameters('aseLocation')]",
+        "ipSslAddressCount": "0",
+        "internalLoadBalancingMode": "3",
+        "clusterSettings": [
+          {
+            "name": "DefaultSslCertificateThumbprint",
+            "value": "[parameters('pfxThumbprint')]"
+          }
+        ],
+        "dnsSuffix": "[parameters('aseDNSSuffix')]",
+        "virtualNetwork": {
+          "Id": "[parameters('vnetRef')]",
+          "Subnet": "[parameters('aseSubnetName')]"
+        },
+        "multiSize": "[parameters('aseFrontEndSize')]",
+        "multiRoleCount": "[parameters('aseFrontEndCount')]",
+        "workerPools": [
+          {
+            "workerSizeId": 0,
+            "workerSize": "[parameters('aseWorkerPoolOneInstanceSize')]",
+            "workerCount": "[parameters('aseWorkerPoolOneInstanceCount')]"
+          },
+          {
+            "workerSizeId": 1,
+            "workerSize": "[parameters('aseWorkerPoolTwoInstanceSize')]",
+            "workerCount": "[parameters('aseWorkerPoolTwoInstanceCount')]"
+          },
+          {
+            "workerSizeId": 2,
+            "workerSize": "[parameters('aseWorkerPoolThreeInstanceSize')]",
+            "workerCount": "[parameters('aseWorkerPoolThreeInstanceCount')]"
+          }
+        ]
+      }
+    }
+  ],
+  "outputs": {
+  }
 }

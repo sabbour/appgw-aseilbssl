@@ -49,11 +49,11 @@
     <None Include="index.php" />
     <None Include="nested\member\sslcert.json" />
     <None Include="nested\member\webapp.json" />
-    <None Include="nested\optional\jumpbox.json" />
-    <None Include="nested\shared\appgw.json" />
     <None Include="nested\shared\appplan.json" />
+    <None Include="nested\shared\jumpbox.json" />
+    <None Include="nested\shared\appgw.json" />
     <None Include="nested\shared\ase.json" />
-    <None Include="nested\optional\dnszone.json" />
+    <None Include="nested\shared\dnszone.json" />
     <None Include="nested\shared\binddns.json" />
     <None Include="nested\shared\virtualnetwork.json" />
     <None Include="README.md" />

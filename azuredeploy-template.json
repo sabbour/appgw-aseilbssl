@@ -73,7 +73,6 @@
         "description": "The Virtual IP of the App Service Environment's Internal Load Balancer. There is no easy way to obtain it post deployment, hence it is here. You may need to re-run the deployment after it is done to update this value."
       }
     },
-
     "aseName": {
       "type": "string",
       "defaultValue": "appgw-ase",
@@ -437,7 +436,7 @@
       "properties": {
         "mode": "Incremental",
         "templateLink": {
-          "uri": "[concat(parameters('repositoryLocation'), '/nested/optional/', 'jumpbox.json')]",
+          "uri": "[concat(parameters('repositoryLocation'), '/nested/shared/', 'jumpbox.json')]",
           "contentVersion": "1.0.0.0"
         },
         "parameters": {
@@ -464,12 +463,71 @@
       "properties": {
         "mode": "Incremental",
         "templateLink": {
-          "uri": "[concat(parameters('repositoryLocation'), '/nested/optional/', 'dnszone.json')]",
+          "uri": "[concat(parameters('repositoryLocation'), '/nested/shared/', 'dnszone.json')]",
           "contentVersion": "1.0.0.0"
         },
         "parameters": {
           "rootZoneName": {
             "value": "[parameters('rootZoneName')]"
+          }
+        }
+      }
+    },
+    {
+      "name": "create-ase",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2015-01-01",
+      "dependsOn": [
+        "update-virtualnetwork-dns"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('repositoryLocation'), '/nested/shared/', 'ase.json')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "aseLocation": {
+            "value": "[parameters('aseLocation')]"
+          },
+          "aseName": {
+            "value": "[parameters('aseName')]"
+          },
+          "aseFrontEndSize": {
+            "value": "[parameters('aseFrontEndSize')]"
+          },
+          "aseFrontEndCount": {
+            "value": "[parameters('aseFrontEndCount')]"
+          },
+          "aseWorkerPoolOneInstanceSize": {
+            "value": "[parameters('aseWorkerPoolOneInstanceSize')]"
+          },
+          "aseWorkerPoolOneInstanceCount": {
+            "value": "[parameters('aseWorkerPoolOneInstanceCount')]"
+          },
+          "aseWorkerPoolTwoInstanceSize": {
+            "value": "[parameters('aseWorkerPoolTwoInstanceSize')]"
+          },
+          "aseWorkerPoolTwoInstanceCount": {
+            "value": "[parameters('aseWorkerPoolTwoInstanceCount')]"
+          },
+          "aseWorkerPoolThreeInstanceSize": {
+            "value": "[parameters('aseWorkerPoolThreeInstanceSize')]"
+          },
+          "aseWorkerPoolThreeInstanceCount": {
+            "value": "[parameters('aseWorkerPoolThreeInstanceCount')]"
+          },
+          "aseDNSSuffix": {
+            "value": "[parameters('aseDNSSuffix')]"
+          },
+          "vnetRef": {
+            "value": "[variables('vnetRef')]"
+          },
+          "aseSubnetName": {
+            "value": "[variables('aseSubnetName')]"
+          },
+          "pfxThumbprint": {
+            "value": "[parameters('pfxThumbprint')]"
           }
         }
       }
