@@ -8,9 +8,6 @@
     "bindVMName": {
       "type": "string"
     },
-    "bindVMSize": {
-      "type": "string"
-    },
     "bindUsername": {
       "type": "string"
     },
@@ -104,7 +101,7 @@
       },
       "properties": {
         "hardwareProfile": {
-          "vmSize": "[parameters('bindVmSize')]"
+          "vmSize": "[variables('bindVmSize')]"
         },
         "osProfile": {
           "computerName": "[parameters('bindVMName')]",
