@@ -35,10 +35,10 @@
     "bindUbuntuOSVersion": "14.04.2-LTS",
     "bindImagePublisher": "Canonical",
     "bindImageOffer": "UbuntuServer",
-    "bindOSDiskName": "appgw-bind-osdisk",
     "bindVmSize": "Standard_A1",
     "bindNicName": "[concat(parameters('bindVMName'), '-nic')]",
-    "bindNSGName": "[concat(parameters('bindVMName'), '-nsg')]"
+    "bindNSGName": "[concat(parameters('bindVMName'), '-nsg')]",
+    "bindOSDiskName": "[concat(parameters('bindVMName'), '-osdisk')]"
   },
   "resources": [
     {

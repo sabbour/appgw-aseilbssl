@@ -1,12 +1,150 @@
 ﻿{
-    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
-    "contentVersion": "1.0.0.0",
-    "parameters": {
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "appgwName": {
+      "type": "string"
     },
-    "variables": {
+    "vnetName": {
+      "type": "string"
     },
-    "resources": [
-    ],
-    "outputs": {
+    "aseName": {
+      "type": "string"
+    },
+    "aseVirtualIp": {
+      "type": "string"
+    },
+    "externalAppHostname": {
+      "type": "string"
+    },
+    "appgwSkuName": {
+      "type": "string"
+    },
+    "appgwCapacity": {
+      "type": "int"
+    },
+    "appgwSubnetRef": {
+      "type": "string"
+    },
+    "pfxBase64": {
+      "type": "string"
+    },
+    "pfxPassword": {
+      "type": "securestring"
+    },
+    "pfxThumbprint": {
+      "type": "string"
+    },
+    "appgwPublicIPRef": {
+      "type": "securestring"
     }
+  },
+  "variables": {
+    "appgwPublicIp": "[concat(parameters('appgwName'), '-ip')]"
+  },
+  "resources": [
+    {
+      "apiVersion": "2017-03-01",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "[variables('appgwPublicIp')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "publicIPAllocationMethod": "Dynamic"
+      },
+      "tags": {
+        "displayName": "AppGW public IP address"
+      }
+    },
+    {
+      "apiVersion": "2017-03-01",
+      "name": "[parameters('appgwName')]",
+      "type": "Microsoft.Network/applicationGateways",
+      "location": "[resourceGroup().location]",
+      "tags": {
+        "displayName": "Application Gateway"
+      },
+      "dependsOn": [
+        "[concat('Microsoft.Network/publicIPAddresses/', variables('appgwPublicIp'))]"
+      ],
+      "properties": {
+        "sku": {
+          "name": "[parameters('appgwSkuName')]",
+          "tier": "Standard",
+          "capacity": "[parameters('appgwCapacity')]"
+        },
+        "gatewayIPConfigurations": [
+          {
+            "name": "appgw_gatewayIpconfig",
+            "properties": {
+              "subnet": {
+                "id": "[parameters('appgwSubnetRef')]"
+              }
+            }
+          }
+        ],
+        "frontendPorts": [
+          {
+            "name": "appgw_frontendPort_https_443",
+            "properties": {
+              "Port": 443
+            }
+          },
+          {
+            "name": "appgw_frontendPort_http_80",
+            "properties": {
+              "Port": 80
+            }
+          }
+        ],
+        "sslCertificates": [
+          {
+            "name": "sslcertificate",
+            "properties": {
+              "data": "[parameters('pfxBase64')]",
+              "password": "[parameters('pfxPassword')]"
+            }
+          }
+        ],
+        "authenticationCertificates": [
+          
+        ],
+        "frontendIPConfigurations": [
+          {
+            "name": "appgw_frontendip",
+            "properties": {
+              "PublicIPAddress": {
+                "id": "[parameters('appgwPublicIPRef')]"
+              }
+            }
+          }
+        ],
+        "probes": [
+
+        ],
+        "backendHttpSettingsCollection": [
+
+        ],
+        "httpListeners": [
+
+        ],
+        "backendAddressPools": [
+          {
+            "name": "[concat(parameters('aseName'),'_pool')]",
+            "properties": {
+              "BackendAddresses": [
+                {
+                  "IpAddress": "[parameters('aseVirtualIp')]"
+                }
+              ]
+            }
+          }
+        ],
+        "requestRoutingRules": [
+
+        ]
+      }
+    }
+  ],
+  "outputs": {
+  }
 }

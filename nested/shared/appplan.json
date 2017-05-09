@@ -1,12 +1,41 @@
 ﻿{
-    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
-    "contentVersion": "1.0.0.0",
-    "parameters": {
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "appPlanName": {
+      "type": "string"
     },
-    "variables": {
+    "applicationGatewayRef": {
+      "type": "string"
     },
-    "resources": [
-    ],
-    "outputs": {
+    "aseName": {
+      "type": "string"
     }
+  },
+  "variables": {
+  },
+  "resources": [
+    {
+      "name": "[parameters('appPlanName')]",
+      "type": "Microsoft.Web/serverfarms",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-09-01",
+      "tags": {
+        "displayName": "App Service Plan"
+      },
+      "properties": {
+        "name": "[parameters('appPlanName')]",
+        "workerSize": 1,
+        "numberOfWorkers": 1,
+        "hostingEnvironment": "[parameters('aseName')]",
+        "hostingEnvironmentId": "[parameters('applicationGatewayRef')]"
+      },
+      "sku": {
+        "Tier": "Premium",
+        "Name": "P1"
+      }
+    }
+  ],
+  "outputs": {
+  }
 }

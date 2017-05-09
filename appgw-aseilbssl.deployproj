@@ -47,8 +47,7 @@
     <None Include="LICENSE" />
     <None Include="metadata.json" />
     <None Include="index.php" />
-    <None Include="nested\member\sslcert.json" />
-    <None Include="nested\member\webapp.json" />
+    <None Include="nested\member\webappwithssl.json" />
     <None Include="nested\shared\appplan.json" />
     <None Include="nested\shared\jumpbox.json" />
     <None Include="nested\shared\appgw.json" />

@@ -20,11 +20,11 @@
     "vmUbuntuOSVersion": "2012-R2-Datacenter",
     "vmImagePublisher": "MicrosoftWindowsServer",
     "vmImageOffer": "WindowsServer",
-    "vmOSDiskName": "appgw-jb-osdisk",
     "vmSize": "Standard_A2",
     "vmNicName": "[concat(parameters('vmName'), '-nic')]",
     "vmNSGName": "[concat(parameters('vmName'), '-nsg')]",
-    "vmIPName": "[concat(parameters('vmName'), '-ip')]"
+    "vmIPName": "[concat(parameters('vmName'), '-ip')]",
+    "bindOSDiskName": "[concat(parameters('vmName'), '-osdisk')]"
   },
   "resources": [
     {

@@ -41,11 +41,18 @@
     "aseSubnetName": {
       "type": "string"
     },
+    "pfxBase64": {
+      "type": "string"
+    },
+    "pfxPassword": {
+      "type": "securestring"
+    },
     "pfxThumbprint": {
       "type": "string"
     }
   },
   "variables": {
+    "certificateName": "[concat(parameters('pfxThumbprint'),'_',parameters('aseName'),'_InternalLoadBalancingASE')]"
   },
   "resources": [
     {
@@ -91,6 +98,25 @@
             "workerCount": "[parameters('aseWorkerPoolThreeInstanceCount')]"
           }
         ]
+      }
+    },
+    {
+      "apiVersion": "2016-03-01",
+      "type": "Microsoft.Web/certificates",
+      "name": "[variables('certificateName')]",
+      "location": "[resourceGroup().location]",
+      "tags": {
+        "displayName": "ILB SSL Certificate"
+      },
+      "dependsOn": [
+        "[concat('Microsoft.Web/hostingEnvironments/', parameters('aseName'))]"
+      ],
+      "properties": {
+        "pfxBlob": "[parameters('pfxBase64')]",
+        "password": "[parameters('pfxPassword')]",
+        "hostingEnvironmentProfile": {
+          "id": "[resourceId('Microsoft.Web/hostingEnvironments',parameters('aseName'))]"
+        }
       }
     }
   ],

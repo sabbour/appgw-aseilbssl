@@ -216,31 +216,48 @@
       }
     },
 
-    "pfxBase64": {
+    "appgwPfxBase64": {
       "type": "string",
       "metadata": {
-        "description": "A pfx file encoded as a base-64 string.  The pfx contains the SSL certificate that will be configured as the default SSL certificate for the ASE and the AppGW for end-to-end SSL."
+        "description": "The Application Gateway pfx file encoded as a base-64 string.  The pfx contains the SSL certificate that will be configured as the SSL certificate for the AppGW for end-to-end SSL."
       }
     },
-    "pfxThumbprint": {
+    "appgwPfxThumbprint": {
       "type": "string",
       "metadata": {
-        "description": "The hexadecimal certificate thumbprint of the certificate contained in pfxBase64.  All spaces need to be removed from the hex string."
+        "description": "The Application Gateway hexadecimal certificate thumbprint of the certificate contained in appgwPfxBase64.  All spaces need to be removed from the hex string."
       }
     },
-    "pfxPassword": {
+    "appgwPfxPassword": {
       "type": "securestring",
       "metadata": {
-        "description": "The password of the .pfx certificate"
+        "description": "The password of the Application Gateway .pfx certificate."
       }
     },
-    "cerBase64": {
+    "aseILBPfxBase64": {
       "type": "string",
       "metadata": {
-        "description": "The Base64 encoded string of your .cer certificate. That's the public part of your SSL certificate. You may use the DigiCert Certificate Utility https://www.digicert.com/util/pfx-certificate-management-utility-import-export-instructions.htm"
+        "description": "The App Service Environment pfx file encoded as a base-64 string.  The pfx contains the SSL certificate that will be configured as the SSL certificate for the ILB of the ASE."
       }
     },
-
+    "aseILBCerBase64": {
+      "type": "string",
+      "metadata": {
+        "description": "The App Service Environment cer file encoded as a base-64 string. This will be used to whitelist the ASE with the AppGW and encrypt the backend communication."
+      }
+    },
+    "aseILBPfxThumbprint": {
+      "type": "string",
+      "metadata": {
+        "description": "The App Service Environment  hexadecimal certificate thumbprint of the certificate contained in aseILBPfxBase64.  All spaces need to be removed from the hex string."
+      }
+    },
+    "aseILBPfxPassword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "The password of the App Service Environment .pfx certificate"
+      }
+    },
     "bindUsername": {
       "type": "string",
       "metadata": {
@@ -278,7 +295,6 @@
     "appgwSubnetName": "appgw-subnet",
     "dnsSubnetName": "dns-subnet",
     "aseSubnetName": "ase-subnet",
-    "certificateName": "[concat(parameters('pfxThumbprint'),'_',parameters('aseName'),'_InternalLoadBalancingASE')]",
     "backendFQDN": "[concat(parameters('appName'),'.',parameters('aseDNSSuffix'))]",
     "apiVersion": "2017-03-01",
     "vnetRef": "[resourceId('Microsoft.Network/virtualNetworks/',variables('vnetName'))]",
@@ -526,8 +542,90 @@
           "aseSubnetName": {
             "value": "[variables('aseSubnetName')]"
           },
+          "pfxBase64": {
+            "value": "[parameters('aseILBPfxBase64')]"
+          },
+          "pfxPassword": {
+            "value": "[parameters('aseILBPfxPassword')]"
+          },
           "pfxThumbprint": {
-            "value": "[parameters('pfxThumbprint')]"
+            "value": "[parameters('aseILBPfxThumbprint')]"
+          }
+        }
+      }
+    },
+    {
+      "name": "create-appgw",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2015-01-01",
+      "dependsOn": [
+        "create-ase"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('repositoryLocation'), '/nested/shared/', 'appgw.json')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "appgwName": {
+            "value": "[variables('appgwName')]"
+          },
+          "aseName": {
+            "value": "[parameters('aseName')]"
+          },
+          "vnetName": {
+            "value": "[variables('vnetName')]"
+          },
+          "externalAppHostname": {
+            "value": "[parameters('externalAppHostname')]"
+          },
+          "appgwSkuName": {
+            "value": "[parameters('appgwSkuName')]"
+          },
+          "appgwCapacity": {
+            "value": "[parameters('appgwCapacity')]"
+          },
+          "appgwSubnetRef": {
+            "value": "[variables('appgwSubnetRef')]"
+          },
+          "pfxBase64": {
+            "value": "[parameters('appgwPfxBase64')]"
+          },
+          "pfxPassword": {
+            "value": "[parameters('appgwPfxPassword')]"
+          },
+          "pfxThumbprint": {
+            "value": "[parameters('appgwPfxThumbprint')]"
+          },
+          "appgwPublicIPRef": {
+            "value": "[variables('appgwPublicIPRef')]"
+          }
+        }
+      }
+    },
+    {
+      "name": "create-appplan",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2015-01-01",
+      "dependsOn": [
+        "create-ase"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('repositoryLocation'), '/nested/shared/', 'appplan.json')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "appPlanName": {
+            "value": "[parameters('appPlanName')]"
+          },
+          "aseName": {
+            "value": "[parameters('aseName')]"
+          },
+          "applicationGatewayRef": {
+            "value": "[variables('applicationGatewayRef')]"
           }
         }
       }
