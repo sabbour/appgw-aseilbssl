@@ -150,7 +150,6 @@
                 "[concat(parameters('repositoryLocation'), '/scripts/install-bind.sh')]",
                 "[concat(parameters('repositoryLocation'), '/scripts/named.conf.local')]",
                 "[concat(parameters('repositoryLocation'), '/scripts/named.conf.options')]",
-                "[concat(parameters('repositoryLocation'), '/scripts/resolv.conf')]",
                 "[concat(parameters('repositoryLocation'), '/scripts/zone.db')]"
               ],
               "commandToExecute": "[concat('sh install-bind.sh ', parameters('aseDNSSuffix'), ' ', parameters('aseVirtualIp'), ' ', parameters('bindIP'))]",

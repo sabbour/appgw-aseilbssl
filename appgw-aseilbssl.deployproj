@@ -60,7 +60,6 @@
     <None Include="scripts\install-bind.sh" />
     <None Include="scripts\named.conf.local" />
     <None Include="scripts\named.conf.options" />
-    <None Include="scripts\resolv.conf" />
     <None Include="scripts\zone.db" />
   </ItemGroup>
   <Target Name="GetReferenceAssemblyPaths" />
