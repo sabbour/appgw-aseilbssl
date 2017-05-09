@@ -2,9 +2,6 @@
   "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "vnetName": {
-      "type": "string"
-    },
     "bindVMName": {
       "type": "string"
     },
@@ -64,8 +61,7 @@
       "location": "[resourceGroup().location]",
       "apiVersion": "2016-03-30",
       "dependsOn": [
-        "[resourceId(subscription().subscriptionId, resourceGroup().name, 'Microsoft.Network/virtualNetworks', parameters('vnetName'))]",
-        "[resourceId(subscription().subscriptionId, resourceGroup().name, 'Microsoft.Network/networkSecurityGroups', variables('bindNSGName'))]"
+        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('bindNSGName'))]"
       ],
       "tags": {
         "displayName": "BIND Network Interface Card"

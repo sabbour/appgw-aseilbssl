@@ -282,13 +282,13 @@
     "certificateName": "[concat(parameters('pfxThumbprint'),'_',parameters('aseName'),'_InternalLoadBalancingASE')]",
     "backendFQDN": "[concat(parameters('appName'),'.',parameters('aseDNSSuffix'))]",
     "apiVersion": "2017-03-01",
-    "vnetRef": "[resourceId(subscription().subscriptionId, resourceGroup().name, 'Microsoft.Network/virtualNetworks',variables('vnetName'))]",
-    "appgwSubnetRef": "[resourceId(variables('vnetRef'),'/subnets/',variables('appgwSubnetName'))]",
-    "dnsSubnetRef": "[resourceId(variables('vnetRef'), '/subnets/', variables('dnsSubnetName'))]",
-    "appgwPublicIPRef": "[resourceId(subscription().subscriptionId, resourceGroup().name, 'Microsoft.Network/publicIPAddresses',variables('appgwPublicIpName'))]",
-    "applicationGatewayRef": "[resourceId(subscription().subscriptionId, resourceGroup().name, 'Microsoft.Network/applicationGateways',variables('appgwName'))]",
-    "aseRef": "[resourceId(subscription().subscriptionId, resourceGroup().name, 'Microsoft.Web/hostingEnvironments',parameters('aseName'))]",
-    "appPlanRef": "[resourceId(subscription().subscriptionId, resourceGroup().name, 'Microsoft.Web/serverFarms',parameters('appPlanName'))]"
+    "vnetRef": "[resourceId('Microsoft.Network/virtualNetworks/',variables('vnetName'))]",
+    "appgwSubnetRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets',variables('vnetName'),variables('appgwSubnetName'))]",
+    "dnsSubnetRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets',variables('vnetName'), variables('dnsSubnetName'))]",
+    "appgwPublicIPRef": "[resourceId('Microsoft.Network/publicIPAddresses',variables('appgwPublicIpName'))]",
+    "applicationGatewayRef": "[resourceId('Microsoft.Network/applicationGateways',variables('appgwName'))]",
+    "aseRef": "[resourceId('Microsoft.Web/hostingEnvironments',parameters('aseName'))]",
+    "appPlanRef": "[resourceId('Microsoft.Web/serverFarms',parameters('appPlanName'))]"
   },
   "resources": [
     {
@@ -343,6 +343,9 @@
           "uri": "[concat(parameters('repositoryLocation'), '/nested/shared/', 'binddns.json')]",
           "contentVersion": "1.0.0.0"
         },
+        "dependsOn": [
+          "[resourceId('Microsoft.Network/virtualNetworks', variables('vnetName'))]"
+        ],
         "parameters": {
           "vnetName": {
             "value": "[variables('vnetName')]"
