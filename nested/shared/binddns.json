@@ -64,8 +64,8 @@
       "location": "[resourceGroup().location]",
       "apiVersion": "2016-03-30",
       "dependsOn": [
-        "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName'))]",
-        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('bindNSGName'))]"
+        "[resourceId(subscription().subscriptionId, resourceGroup().name, 'Microsoft.Network/virtualNetworks', parameters('vnetName'))]",
+        "[resourceId(subscription().subscriptionId, resourceGroup().name, 'Microsoft.Network/networkSecurityGroups', variables('bindNSGName'))]"
       ],
       "tags": {
         "displayName": "BIND Network Interface Card"
@@ -127,7 +127,7 @@
         "networkProfile": {
           "networkInterfaces": [
             {
-              "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('bindNicName'))]"
+              "id": "[resourceId(subscription().subscriptionId, resourceGroup().name, 'Microsoft.Network/networkInterfaces', variables('bindNicName'))]"
             }
           ]
         }
@@ -139,7 +139,7 @@
           "location": "[resourceGroup().location]",
           "apiVersion": "2016-03-30",
           "dependsOn": [
-            "[resourceId('Microsoft.Compute/virtualMachines', parameters('bindVMName'))]"
+            "[resourceId(subscription().subscriptionId, resourceGroup().name, 'Microsoft.Compute/virtualMachines', parameters('bindVMName'))]"
           ],
           "tags": {
             "displayName": "SetupBindCustomScript"
