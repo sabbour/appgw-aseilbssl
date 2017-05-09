@@ -347,9 +347,6 @@
           "[resourceId('Microsoft.Network/virtualNetworks', variables('vnetName'))]"
         ],
         "parameters": {
-          "vnetName": {
-            "value": "[variables('vnetName')]"
-          },
           "bindVMName": {
             "value": "[variables('bindVMName')]"
           },
