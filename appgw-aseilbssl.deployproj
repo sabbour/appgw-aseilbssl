@@ -53,7 +53,7 @@
     <None Include="nested\shared\appgw.json" />
     <None Include="nested\shared\appplan.json" />
     <None Include="nested\shared\ase.json" />
-    <None Include="nested\optional\azuredns.json" />
+    <None Include="nested\optional\dnszone.json" />
     <None Include="nested\shared\binddns.json" />
     <None Include="nested\shared\virtualnetwork.json" />
     <None Include="README.md" />

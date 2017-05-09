@@ -455,6 +455,26 @@
           }
         }
       }
+    },
+    {
+      "name": "create-dnszone",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2015-01-01",
+      "dependsOn": [
+        ""
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('repositoryLocation'), '/nested/optional/', 'dnszone.json')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "rootZoneName": {
+            "value": "[parameters('rootZoneName')]"
+          }
+        }
+      }
     }
   ],
   "outputs": {
