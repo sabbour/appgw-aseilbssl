@@ -571,6 +571,9 @@
           "appgwName": {
             "value": "[variables('appgwName')]"
           },
+          "aseVirtualIp": {
+            "value": "[parameters('aseVirtualIp')]"
+          },
           "aseName": {
             "value": "[parameters('aseName')]"
           },
