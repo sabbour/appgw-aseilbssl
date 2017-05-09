@@ -1,0 +1,173 @@
+﻿{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "vnetName": {
+      "type": "string"
+    },
+    "bindVMName": {
+      "type": "string"
+    },
+    "bindVMSize": {
+      "type": "string"
+    },
+    "bindUsername": {
+      "type": "string"
+    },
+    "bindPassword": {
+      "type": "string"
+    },
+    "bindIP": {
+      "type": "string"
+    },
+    "dnsSubnetRef": {
+      "type": "string"
+    },
+    "repositoryLocation": {
+      "type": "string"
+    },
+    "aseDNSSuffix": {
+      "type": "string"
+    },
+    "aseVirtualIP": {
+      "type": "string"
+    },
+    "customScriptTimestamp": {
+      "type": "int"
+    }
+  },
+  "variables": {
+    "bindStorageType": "Standard_LRS",
+    "bindUbuntuOSVersion": "14.04.2-LTS",
+    "bindImagePublisher": "Canonical",
+    "bindImageOffer": "UbuntuServer",
+    "bindOSDiskName": "appgw-bindOSDisk",
+    "bindVmSize": "Standard_A1",
+    "bindNicName": "[concat(parameters('bindVMName'), '-nic')]",
+    "bindNSGName": "[concat(parameters('bindVMName'), '-nsg')]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "name": "[variables('bindNSGName')]",
+      "apiVersion": "2016-03-30",
+      "location": "[resourceGroup().location]",
+      "tags": {
+        "displayName": "BIND DNS Network Security Group"
+      },
+      "properties": {
+        "securityRules": [
+        ]
+      },
+      "dependsOn": []
+    },
+    {
+      "name": "[variables('bindNicName')]",
+      "type": "Microsoft.Network/networkInterfaces",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-03-30",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName'))]",
+        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('bindNSGName'))]"
+      ],
+      "tags": {
+        "displayName": "BIND Network Interface Card"
+      },
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "privateIPAllocationMethod": "Static",
+              "privateIpAddress": "[parameters('bindIP')]",
+              "subnet": {
+                "id": "[parameters('dnsSubnetRef')]"
+              },
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('bindNSGName'))]"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "[parameters('bindVMName')]",
+      "type": "Microsoft.Compute/virtualMachines",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-04-30-preview",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/networkInterfaces', variables('bindNicName'))]"
+      ],
+      "tags": {
+        "displayName": "BIND Virtual Machine"
+      },
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "[parameters('bindVmSize')]"
+        },
+        "osProfile": {
+          "computerName": "[parameters('bindVMName')]",
+          "adminUsername": "[parameters('bindUsername')]",
+          "adminPassword": "[parameters('bindPassword')]"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "[variables('bindImagePublisher')]",
+            "offer": "[variables('bindImageOffer')]",
+            "sku": "[variables('bindUbuntuOSVersion')]",
+            "version": "latest"
+          },
+          "osDisk": {
+            "name": "appgw-bind-osdisk",
+            "caching": "ReadWrite",
+            "createOption": "FromImage",
+            "managedDisk": {
+              "storageAccountType": "Standard_LRS"
+            }
+          }
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('bindNicName'))]"
+            }
+          ]
+        }
+      },
+      "resources": [
+        {
+          "name": "SetupBindCustomScript",
+          "type": "extensions",
+          "location": "[resourceGroup().location]",
+          "apiVersion": "2016-03-30",
+          "dependsOn": [
+            "[resourceId('Microsoft.Compute/virtualMachines', parameters('bindVMName'))]"
+          ],
+          "tags": {
+            "displayName": "SetupBindCustomScript"
+          },
+          "properties": {
+            "publisher": "Microsoft.OSTCExtensions",
+            "type": "CustomScriptForLinux",
+            "typeHandlerVersion": "1.4",
+            "autoUpgradeMinorVersion": true,
+            "settings": {
+              "fileUris": [
+                "[concat(parameters('repositoryLocation'), '/scripts/install-bind.sh')]",
+                "[concat(parameters('repositoryLocation'), '/scripts/named.conf.local')]",
+                "[concat(parameters('repositoryLocation'), '/scripts/named.conf.options')]",
+                "[concat(parameters('repositoryLocation'), '/scripts/resolv.conf')]",
+                "[concat(parameters('repositoryLocation'), '/scripts/zone.db')]"
+              ],
+              "commandToExecute": "[concat('sh install-bind.sh ', parameters('aseDNSSuffix'), ' ', parameters('aseVirtualIp'), ' ', parameters('bindIP'))]",
+              "timestamp": "[parameters('customScriptTimestamp')]"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "outputs": {
+  }
+}

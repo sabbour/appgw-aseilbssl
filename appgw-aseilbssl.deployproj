@@ -27,6 +27,7 @@
   <ItemGroup>
     <Content Include="azuredeploy.json" />
     <None Include="appgw-aseilbssl.sln" />
+    <None Include="azuredeploy-template.json" />
     <None Include="azuredeploy.local.parameters.json" />
     <None Include="azuredeploy.parameters.json" />
     <None Include="Deployment.targets">
@@ -46,6 +47,15 @@
     <None Include="LICENSE" />
     <None Include="metadata.json" />
     <None Include="index.php" />
+    <None Include="nested\member\sslcert.json" />
+    <None Include="nested\member\webapp.json" />
+    <None Include="nested\optional\jumpbox.json" />
+    <None Include="nested\shared\appgw.json" />
+    <None Include="nested\shared\appplan.json" />
+    <None Include="nested\shared\ase.json" />
+    <None Include="nested\optional\azuredns.json" />
+    <None Include="nested\shared\binddns.json" />
+    <None Include="nested\shared\virtualnetwork.json" />
     <None Include="README.md" />
     <None Include="scripts\install-bind.sh" />
     <None Include="scripts\named.conf.local" />

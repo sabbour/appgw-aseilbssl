@@ -1,0 +1,430 @@
+﻿{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+
+  "parameters": {
+    "aseLocation": {
+      "type": "string",
+      "allowedValues": [
+        "Central US",
+        "East US",
+        "East US 2",
+        "North Central US",
+        "South Central US",
+        "West Central US",
+        "West US",
+        "West US 2",
+        "Canada Central",
+        "North Europe",
+        "West Europe",
+        "East Asia",
+        "Southeast Asia",
+        "Japan East",
+        "Japan West",
+        "Brazil South",
+        "Australia East",
+        "Australia Southeast",
+        "West India",
+        "Central India",
+        "South India"
+      ],
+      "metadata": {
+        "description": "Location of the App Service Environment. This is a workaround because ASE doesn't like the normalized (ie: westeurope) naming now. Obviously, has to be the same location as your Resource Group."
+      }
+    },
+    "vnetAddressPrefix": {
+      "type": "string",
+      "defaultValue": "10.0.0.0/16",
+      "metadata": {
+        "description": "The Virtual Network address prefix."
+      }
+    },
+    "appgwSubnetPrefix": {
+      "type": "string",
+      "defaultValue": "10.0.1.0/24",
+      "metadata": {
+        "description": "The Application Gateway subnet."
+      }
+    },
+    "dnsSubnetPrefix": {
+      "type": "string",
+      "defaultValue": "10.0.2.0/24",
+      "metadata": {
+        "description": "The DNS subnet."
+      }
+    },
+    "aseSubnetPrefix": {
+      "type": "string",
+      "defaultValue": "10.0.3.0/24",
+      "metadata": {
+        "description": "The App Service Environment subnet."
+      }
+    },
+    "bindIp": {
+      "type": "string",
+      "defaultValue": "10.0.2.50",
+      "metadata": {
+        "description": "The Private Static IP that will be allocated to BIND (DNS) server. This will be set as your Virtual Network's DNS server."
+      }
+    },
+    "aseVirtualIp": {
+      "type": "string",
+      "defaultValue": "10.0.3.9",
+      "metadata": {
+        "description": "The Virtual IP of the App Service Environment's Internal Load Balancer. There is no easy way to obtain it post deployment, hence it is here. You may need to re-run the deployment after it is done to update this value."
+      }
+    },
+
+    "aseName": {
+      "type": "string",
+      "defaultValue": "appgw-ase",
+      "metadata": {
+        "description": "Name of the App Service Environment"
+      }
+    },
+    "aseFrontEndSize": {
+      "type": "string",
+      "allowedValues": [
+        "Medium",
+        "Large",
+        "ExtraLarge"
+      ],
+      "defaultValue": "Medium",
+      "metadata": {
+        "description": "Instance size for the front-end pool.  Maps to P2,P3,P4."
+      }
+    },
+    "aseFrontEndCount": {
+      "type": "int",
+      "defaultValue": 2,
+      "metadata": {
+        "description": "Number of instances in the front-end pool.  Minimum of two."
+      }
+    },
+    "aseWorkerPoolOneInstanceSize": {
+      "type": "string",
+      "allowedValues": [
+        "Small",
+        "Medium",
+        "Large",
+        "ExtraLarge"
+      ],
+      "defaultValue": "Small",
+      "metadata": {
+        "description": "Instance size for worker pool one.  Maps to P1,P2,P3,P4."
+      }
+    },
+    "aseWorkerPoolOneInstanceCount": {
+      "type": "int",
+      "defaultValue": 2,
+      "metadata": {
+        "description": "Number of instances in worker pool one.  Minimum of two."
+      }
+    },
+    "aseWorkerPoolTwoInstanceSize": {
+      "type": "string",
+      "allowedValues": [
+        "Small",
+        "Medium",
+        "Large",
+        "ExtraLarge"
+      ],
+      "defaultValue": "Small",
+      "metadata": {
+        "description": "Instance size for worker pool two.  Maps to P1,P2,P3,P4."
+      }
+    },
+    "aseWorkerPoolTwoInstanceCount": {
+      "type": "int",
+      "defaultValue": 0,
+      "metadata": {
+        "description": "Number of instances in worker pool two.  Can be zero if not using worker pool two."
+      }
+    },
+    "aseWorkerPoolThreeInstanceSize": {
+      "type": "string",
+      "allowedValues": [
+        "Small",
+        "Medium",
+        "Large",
+        "ExtraLarge"
+      ],
+      "defaultValue": "Small",
+      "metadata": {
+        "description": "Instance size for worker pool three.  Maps to P1,P2,P3,P4."
+      }
+    },
+    "aseWorkerPoolThreeInstanceCount": {
+      "type": "int",
+      "defaultValue": 0,
+      "metadata": {
+        "description": "Number of instances in worker pool three.  Can be zero if not using worker pool three."
+      }
+    },
+
+    "appPlanName": {
+      "type": "string",
+      "defaultValue": "appgw-ase-plan",
+      "metadata": {
+        "description": "Name of the App Service Plan"
+      }
+    },
+    "appName": {
+      "type": "string",
+      "defaultValue": "webapp1",
+      "metadata": {
+        "description": "The name of the app to be deployed. This will be prepended to the App Service Environment subdomain to create the app's hostname."
+      }
+    },
+    "aseDNSSuffix": {
+      "type": "string",
+      "defaultValue": "internal.domain.com",
+      "metadata": {
+        "description": "The subdomain of the App Service Environment. This doesn't need to be a real domain."
+      }
+    },
+    "rootZoneName": {
+      "type": "string",
+      "defaultValue": "domain.com",
+      "metadata": {
+        "description": "The public hostname of the app to be deployed. Make sure that your SSL certificate works for this and that you can manage this domain's DNS."
+      }
+    },
+    "externalAppHostname": {
+      "type": "string",
+      "defaultValue": "webapp1.domain.com",
+      "metadata": {
+        "description": "The public hostname of the app to be deployed. Make sure that your SSL certificate works for this and that you can manage this domain's DNS."
+      }
+    },
+
+    "appgwSkuName": {
+      "type": "string",
+      "allowedValues": [
+        "Standard_Small",
+        "Standard_Medium",
+        "Standard_Large"
+      ],
+      "defaultValue": "Standard_Medium",
+      "metadata": {
+        "description": "The SKU of the Application Gateway."
+      }
+    },
+    "appgwCapacity": {
+      "type": "int",
+      "defaultValue": 2,
+      "metadata": {
+        "description": "The number of instances running in the Application Gateway"
+      }
+    },
+
+    "pfxBase64": {
+      "type": "string",
+      "metadata": {
+        "description": "A pfx file encoded as a base-64 string.  The pfx contains the SSL certificate that will be configured as the default SSL certificate for the ASE and the AppGW for end-to-end SSL."
+      }
+    },
+    "pfxThumbprint": {
+      "type": "string",
+      "metadata": {
+        "description": "The hexadecimal certificate thumbprint of the certificate contained in pfxBase64.  All spaces need to be removed from the hex string."
+      }
+    },
+    "pfxPassword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "The password of the .pfx certificate"
+      }
+    },
+    "cerBase64": {
+      "type": "string",
+      "metadata": {
+        "description": "The Base64 encoded string of your .cer certificate. That's the public part of your SSL certificate. You may use the DigiCert Certificate Utility https://www.digicert.com/util/pfx-certificate-management-utility-import-export-instructions.htm"
+      }
+    },
+
+    "bindUsername": {
+      "type": "string",
+      "metadata": {
+        "description": "Username for the BIND DNS Virtual Machine."
+      }
+    },
+    "bindPassword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Password for the BIND DNS Virtual Machine."
+      }
+    },
+    "repositoryLocation": {
+      "type": "string",
+      "defaultValue": "https://raw.githubusercontent.com/sabbour/appgw-aseilbssl/master",
+      "metadata": {
+        "description": "Container in staging storage account to receive post-build staging folder upload"
+      }
+    },
+    "customScriptTimestamp": {
+      "type": "int",
+      "defaultValue": 1,
+      "metadata": {
+        "description": "Timestamp sent to the CustomScript extension. If you need to run the script again, you need to change this value when running the template."
+      }
+    }
+  },
+  "variables": {
+    "vnetName": "appgw-vnet",
+    "appgwName": "appgw",
+    "bindVMName": "appgw-bind",
+    "appgwPublicIpName": "appgw-publicip",
+    "bindNSGName": "appgw-bind-nsg",
+    "appgwSubnetName": "appgw-subnet",
+    "dnsSubnetName": "dns-subnet",
+    "aseSubnetName": "ase-subnet",
+    "certificateName": "[concat(parameters('pfxThumbprint'),'_',parameters('aseName'),'_InternalLoadBalancingASE')]",
+    "backendFQDN": "[concat(parameters('appName'),'.',parameters('aseDNSSuffix'))]",
+    "apiVersion": "2017-03-01",
+    "vnetRef": "[resourceId('Microsoft.Network/virtualNetworks',variables('vnetName'))]",
+    "appgwSubnetRef": "[concat(variables('vnetRef'),'/subnets/',variables('appgwSubnetName'))]",
+    "dnsSubnetRef": "[concat(variables('vnetRef'), '/subnets/', variables('dnsSubnetName'))]",
+    "appgwPublicIPRef": "[resourceId('Microsoft.Network/publicIPAddresses',variables('appgwPublicIpName'))]",
+    "applicationGatewayRef": "[resourceId('Microsoft.Network/applicationGateways',variables('appgwName'))]",
+    "aseRef": "[resourceId('Microsoft.Web/hostingEnvironments',parameters('aseName'))]",
+    "appPlanRef": "[resourceId('Microsoft.Web/serverFarms',parameters('appPlanName'))]"    
+  },
+  "resources": [
+    {
+      "name": "CreateVirtualNetwork",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2015-01-01",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('repositoryLocation'), 'nested/shared/', 'virtualnetwork.json')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "vnetName": {
+            "value": "[variables('vnetName')]"
+          },
+          "vnetAddressPrefix": {
+            "value": "[parameters('vnetAddressPrefix')]"
+          },
+          "vnetSubnets": {
+            "value": [
+              {
+                "name": "[variables('appgwSubnetName')]",
+                "properties": {
+                  "addressPrefix": "[parameters('appgwSubnetPrefix')]"
+                }
+              },
+              {
+                "name": "[variables('dnsSubnetName')]",
+                "properties": {
+                  "addressPrefix": "[parameters('dnsSubnetPrefix')]"
+                }
+              },
+              {
+                "name": "[variables('aseSubnetName')]",
+                "properties": {
+                  "addressPrefix": "[parameters('aseSubnetPrefix')]"
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "CreateBIND",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2015-01-01",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('repositoryLocation'), 'nested/shared/', 'binddns.json')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "vnetName": {
+            "value": "[variables('vnetName')]"
+          },
+          "bindVMName": {
+            "value": "[variables('bindVMName')]"
+          },
+          "bindUsername": {
+            "value": "[parameters('bindUsername')]"
+          },
+          "bindPassword": {
+            "value": "[parameters('bindPassword')]"
+          },
+          "bindIP": {
+            "value": "[parameters('bindIP')]"
+          },
+          "dnsSubnetRef": {
+            "value": "[variables('dnsSubnetRef')]"
+          },
+          "repositoryLocation": {
+            "value": "[parameters('repositoryLocation')]"
+          },
+          "aseDNSSuffix": {
+            "value": "[parameters('aseDNSSuffix')]"
+          },
+          "aseVirtualIP": {
+            "value": "[parameters('aseVirtualIp')]"
+          },
+          "customScriptTimestamp": {
+            "value": "[parameters('customScriptTimestamp')]"
+          }
+        }
+      }
+    },
+    {
+      "name": "UpdateVirtualNetworkDNS",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2015-01-01",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('repositoryLocation'), 'nested/shared/', 'virtualnetwork.json')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "vnetName": {
+            "value": "[variables('vnetName')]"
+          },
+          "vnetAddressPrefix": {
+            "value": "[parameters('vnetAddressPrefix')]"
+          },
+          "vnetSubnets": {
+            "value": [
+              {
+                "name": "[variables('appgwSubnetName')]",
+                "properties": {
+                  "addressPrefix": "[parameters('appgwSubnetPrefix')]"
+                }
+              },
+              {
+                "name": "[variables('dnsSubnetName')]",
+                "properties": {
+                  "addressPrefix": "[parameters('dnsSubnetPrefix')]"
+                }
+              },
+              {
+                "name": "[variables('aseSubnetName')]",
+                "properties": {
+                  "addressPrefix": "[parameters('aseSubnetPrefix')]"
+                }
+              }
+            ]
+          },
+          "vnetDnsServers": {
+            "value": [
+              "[parameters('bindIp')]"
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "outputs": {
+  }
+}

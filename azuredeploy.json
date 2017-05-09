@@ -341,23 +341,6 @@
     },
     {
       "apiVersion": "[variables('apiVersion')]",
-      "type": "Microsoft.Network/virtualNetworks",
-      "name": "[variables('vnetName')]",
-      "location": "[resourceGroup().location]",
-      "tags": {
-        "displayName": "Virtual Network - DNS setup"
-      },
-      "dependsOn": [
-        "[concat('Microsoft.Compute/virtualMachines/', variables('bindVMName'), '/extensions/SetupBindCustomScript')]"
-      ],
-      "properties": {       
-        "dhcpOptions": {
-          "dnsServers": [ "[parameters('bindIp')]" ]
-        }
-      }
-    },
-    {
-      "apiVersion": "[variables('apiVersion')]",
       "type": "Microsoft.Network/publicIPAddresses",
       "name": "[variables('appgwPublicIpName')]",
       "location": "[resourceGroup().location]",
