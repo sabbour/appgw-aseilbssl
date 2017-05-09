@@ -87,6 +87,10 @@
               "subnet": {
                 "id": "[parameters('dnsSubnetRef')]"
               },
+              "privateIPAllocationMethod": "Dynamic",
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('vmIPName'))]"
+              },
               "networkSecurityGroup": {
                 "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('vmNSGName'))]"
               }
