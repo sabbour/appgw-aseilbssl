@@ -35,7 +35,7 @@
     "bindUbuntuOSVersion": "14.04.2-LTS",
     "bindImagePublisher": "Canonical",
     "bindImageOffer": "UbuntuServer",
-    "bindOSDiskName": "appgw-bindOSDisk",
+    "bindOSDiskName": "appgw-bind-osdisk",
     "bindVmSize": "Standard_A1",
     "bindNicName": "[concat(parameters('bindVMName'), '-nic')]",
     "bindNSGName": "[concat(parameters('bindVMName'), '-nsg')]"
@@ -112,7 +112,7 @@
             "version": "latest"
           },
           "osDisk": {
-            "name": "appgw-bind-osdisk",
+            "name": "[variables('bindOSDiskName')]",
             "caching": "ReadWrite",
             "createOption": "FromImage",
             "managedDisk": {
