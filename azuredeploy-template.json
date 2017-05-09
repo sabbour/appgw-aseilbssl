@@ -1,7 +1,6 @@
 ﻿{
   "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
-
   "parameters": {
     "aseLocation": {
       "type": "string",
@@ -274,6 +273,7 @@
     "vnetName": "appgw-vnet",
     "appgwName": "appgw",
     "bindVMName": "appgw-bind",
+    "jumpBoxVMName": "appgw-jumpbox",
     "appgwPublicIpName": "appgw-publicip",
     "bindNSGName": "appgw-bind-nsg",
     "appgwSubnetName": "appgw-subnet",
@@ -442,7 +442,7 @@
         },
         "parameters": {
           "vmName": {
-            "value": "[variables('bindVMName')]"
+            "value": "[variables('jumpBoxVMName')]"
           },
           "vmUsername": {
             "value": "[parameters('bindUsername')]"
