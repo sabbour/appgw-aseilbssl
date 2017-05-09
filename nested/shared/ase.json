@@ -104,7 +104,7 @@
       "apiVersion": "2016-03-01",
       "type": "Microsoft.Web/certificates",
       "name": "[variables('certificateName')]",
-      "location": "[resourceGroup().location]",
+      "location": "[parameters('aseLocation')]",
       "tags": {
         "displayName": "ILB SSL Certificate"
       },
