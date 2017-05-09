@@ -292,7 +292,7 @@
   },
   "resources": [
     {
-      "name": "CreateVirtualNetwork",
+      "name": "create-virtualnetwork",
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2015-01-01",
       "properties": {
@@ -334,11 +334,11 @@
       }
     },
     {
-      "name": "CreateBIND",
+      "name": "create-bind",
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2015-01-01",
       "dependsOn": [
-        "[resourceId('Microsoft.Network/virtualNetworks', variables('vnetName'))]"
+        "create-virtualnetwork"
       ],
       "properties": {
         "mode": "Incremental",
@@ -378,11 +378,11 @@
       }
     },
     {
-      "name": "UpdateVirtualNetworkDNS",
+      "name": "update-virtualnetwork-dns",
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2015-01-01",
       "dependsOn": [
-        "[resourceId('Microsoft.Compute/virtualMachines/', variables('bindVMName'), '/extensions/SetupBindCustomScript')]"
+        "create-bind"
       ],
       "properties": {
         "mode": "Incremental",

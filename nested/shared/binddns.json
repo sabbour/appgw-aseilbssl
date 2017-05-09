@@ -9,7 +9,7 @@
       "type": "string"
     },
     "bindPassword": {
-      "type": "string"
+      "type": "securestring"
     },
     "bindIP": {
       "type": "string"
@@ -130,7 +130,7 @@
       },
       "resources": [
         {
-          "name": "SetupBindCustomScript",
+          "name": "bind-customscript",
           "type": "extensions",
           "location": "[resourceGroup().location]",
           "apiVersion": "2016-03-30",
@@ -138,7 +138,7 @@
             "[resourceId(subscription().subscriptionId, resourceGroup().name, 'Microsoft.Compute/virtualMachines', parameters('bindVMName'))]"
           ],
           "tags": {
-            "displayName": "SetupBindCustomScript"
+            "displayName": "bind-customscript"
           },
           "properties": {
             "publisher": "Microsoft.OSTCExtensions",
