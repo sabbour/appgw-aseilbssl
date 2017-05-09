@@ -340,7 +340,7 @@
       "properties": {
         "mode": "Incremental",
         "templateLink": {
-          "uri": "[concat(parameters('repositoryLocation'), 'nested/shared/', 'binddns.json')]",
+          "uri": "[concat(parameters('repositoryLocation'), '/nested/shared/', 'binddns.json')]",
           "contentVersion": "1.0.0.0"
         },
         "parameters": {
@@ -384,7 +384,7 @@
       "properties": {
         "mode": "Incremental",
         "templateLink": {
-          "uri": "[concat(parameters('repositoryLocation'), 'nested/shared/', 'virtualnetwork.json')]",
+          "uri": "[concat(parameters('repositoryLocation'), '/nested/shared/', 'virtualnetwork.json')]",
           "contentVersion": "1.0.0.0"
         },
         "parameters": {
