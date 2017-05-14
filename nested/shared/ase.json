@@ -121,5 +121,9 @@
     }
   ],
   "outputs": {
+    "aseILBCertificateName": {
+      "type": "array",
+      "value": "[variables('certificateName')]"
+    }
   }
 }

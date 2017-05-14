@@ -1,0 +1,206 @@
+﻿{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "vnetName": {
+      "type": "string"
+    },
+    "appgwName": {
+      "type": "string"
+    },
+    "appgwSubnetName": {
+      "type": "string"
+    },
+    "appgwSkuName": {
+      "type": "string"
+    },
+    "appgwCapacity": {
+      "type": "int"
+    },
+    "wafMode": {
+      "type": "string",
+      "allowedValues": [
+        "Detection",
+        "Prevention"
+      ],
+      "defaultValue": "Detection",
+      "metadata": {
+        "description": "WAF Mode"
+      }
+    },
+    "wafRuleSetType": {
+      "type": "string",
+      "allowedValues": [
+        "OWASP"
+      ],
+      "defaultValue": "OWASP",
+      "metadata": {
+        "description": "WAF Rule Set Type"
+      }
+    },
+    "wafRuleSetVersion": {
+      "type": "string",
+      "allowedValues": [
+        "2.2.9",
+        "3.0"
+      ],
+      "defaultValue": "3.0",
+      "metadata": {
+        "description": "WAF Rule Set Version"
+      }
+    },
+    "appgwPfxBase64": {
+      "type": "string"
+    },
+    "appgwPfxPassword": {
+      "type": "securestring"
+    }
+  },
+  "variables": {
+    "appgwPublicIp": "[concat(parameters('appgwName'), '-ip')]",
+    "vnetRef": "[resourceId('Microsoft.Network/virtualNetworks/',parameters('vnetName'))]",
+    "appgwSubnetRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets',parameters('vnetName'),parameters('appgwSubnetName'))]",
+    "appgwPublicIPRef": "[resourceId('Microsoft.Network/publicIPAddresses',variables('appgwPublicIp'))]",
+    "applicationGatewayRef": "[resourceId('Microsoft.Network/applicationGateways',parameters('appgwName'))]"
+  },
+  "resources": [
+    {
+      "apiVersion": "2017-03-01",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "[variables('appgwPublicIp')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "publicIPAllocationMethod": "Dynamic"
+      },
+      "tags": {
+        "displayName": "AppGW public IP address"
+      }
+    },
+    {
+      "apiVersion": "2017-03-01",
+      "name": "[parameters('appgwName')]",
+      "type": "Microsoft.Network/applicationGateways",
+      "location": "[resourceGroup().location]",
+      "tags": {
+        "displayName": "Application Gateway"
+      },
+      "dependsOn": [
+        "[concat('Microsoft.Network/publicIPAddresses/', variables('appgwPublicIp'))]"
+      ],
+      "properties": {
+        "sku": {
+          "name": "[parameters('appgwSkuName')]",
+          "tier": "WAF",
+          "capacity": "[parameters('appgwCapacity')]"
+        },
+        "webApplicationFirewallConfiguration": {
+          "enabled": "true",
+          "firewallMode": "[parameters('wafMode')]",
+          "ruleSetType": "[parameters('wafRuleSetType')]",
+          "ruleSetVersion": "[parameters('wafRuleSetVersion')]",
+          "disabledRuleGroups": []
+        },
+        "gatewayIPConfigurations": [
+          {
+            "name": "appgw-gatewayIpconfig",
+            "properties": {
+              "subnet": {
+                "id": "[variables('appgwSubnetRef')]"
+              }
+            }
+          }
+        ],
+        "frontendPorts": [
+          {
+            "name": "appgw-frontendPort-http",
+            "properties": {
+              "Port": 80
+            }
+          },
+          {
+            "name": "appgw-frontendPort-https",
+            "properties": {
+              "Port": 443
+            }
+          }
+        ],
+        "sslCertificates": [
+          {
+            "name": "sabbour.pw-frontend-sslcertificate",
+            "properties": {
+              "data": "[parameters('appgwPfxBase64')]",
+              "password": "[parameters('appgwPfxPassword')]"
+            }
+          }
+        ],
+        "frontendIPConfigurations": [
+          {
+            "name": "appgw-frontendip",
+            "properties": {
+              "PublicIPAddress": {
+                "id": "[variables('appgwPublicIPRef')]"
+              }
+            }
+          }
+        ],
+
+        "backendHttpSettingsCollection": [
+          {
+            "name": "placeholder-setting-http",
+            "properties": {
+              "Port": 80,
+              "Protocol": "Http",
+              "CookieBasedAffinity": "Disabled"
+            }
+          }
+        ],
+        "httpListeners": [
+          {
+            "name": "placeholder-listener-http",
+            "properties": {
+              "FrontendIPConfiguration": {
+                "Id": "[concat(variables('applicationGatewayRef'), '/frontendIPConfigurations/appgw-frontendip')]"
+              },
+              "FrontendPort": {
+                "Id": "[concat(variables('applicationGatewayRef'), '/frontendPorts/appgw-frontendPort-http')]"
+              },
+              "Protocol": "Http",
+              "SslCertificate": null
+            }
+          }
+        ],
+        "backendAddressPools": [
+          {
+            "name": "placeholder_pool",
+            "properties": {
+              "BackendAddresses": [
+                {
+                  "IpAddress": "1.2.3.4"
+                }
+              ]
+            }
+          }
+        ],
+        "requestRoutingRules": [
+          {
+            "name": "placeholder-rule",
+            "properties": {
+              "RuleType": "Basic",
+              "httpListener": {
+                "id": "[concat(variables('applicationGatewayRef'), '/httpListeners/placeholder-listener-http')]"
+              },
+              "backendAddressPool": {
+                "id": "[concat(variables('applicationGatewayRef'), '/backendAddressPools/placeholder_pool')]"
+              },
+              "backendHttpSettings": {
+                "id": "[concat(variables('applicationGatewayRef'), '/backendHttpSettingsCollection/placeholder-setting-http')]"
+              }
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "outputs": {
+  }
+}

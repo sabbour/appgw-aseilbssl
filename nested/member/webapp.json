@@ -1,0 +1,59 @@
+﻿{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "appName": {
+      "type": "string"
+    },
+    "appplanName": {
+      "type": "string"
+    },
+    "externalAppHostname": {
+      "type": "string"
+    },
+    "aseILBCertificateThumbprint": {
+      "type": "string"
+    }
+  },
+  "variables": {
+    "appPlanId": "[resourceId(resourceGroup().name, 'Microsoft.Web/serverfarms', parameters('appplanName'))]",
+    "aseId": "[resourceId(resourceGroup().name, 'Microsoft.Web/hostingEnvironments', 'appgw-ase')]"
+  },
+  "resources": [
+    {
+      "name": "[parameters('appName')]",
+      "type": "Microsoft.Web/sites",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2015-08-01",
+      "dependsOn": [],
+      "tags": {
+        "[concat('hidden-related:', resourceId(resourceGroup().name, 'Microsoft.Web/serverfarms', parameters('appplanName')))]": "Resource",
+        "displayName": "[concat('Web App - ', parameters('appName'))]"
+      },
+      "properties": {
+        "name": "[parameters('appName')]",
+        "serverFarmId": "[variables('appPlanId')]"
+      },
+      "resources": [
+        {
+          "type": "Microsoft.Web/sites/hostnameBindings",
+          "name": "[concat(parameters('appName'), '/', parameters('externalAppHostname'))]",
+          "apiVersion": "2016-03-01",
+          "tags": {
+            "displayName": "[concat('Custom Domain - ', parameters('externalAppHostname'))]"
+          },
+          "dependsOn": [
+            "[concat('Microsoft.Web/sites/',parameters('appName'))]"
+          ],
+          "properties": {
+            "sslState": "SniEnabled",
+            "thumbprint": "[parameters('aseILBCertificateThumbprint')]"
+          }
+        }
+      ]
+    }
+  ],
+  "outputs": {
+
+  }
+}

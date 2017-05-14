@@ -25,9 +25,10 @@
   <Import Condition=" Exists('$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Deployment\1.1\DeploymentProject.targets') " Project="$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Deployment\1.1\DeploymentProject.targets" />
   <!-- vertag<:>end -->
   <ItemGroup>
-    <Content Include="azuredeploy.json" />
+    <Content Include="azuredeploy.json.old" />
+    <None Include="Add-WebAppToAppGw.ps1" />
     <None Include="appgw-aseilbssl.sln" />
-    <None Include="azuredeploy-template.json" />
+    <None Include="azuredeploy.json" />
     <None Include="azuredeploy-webapp.json" />
     <None Include="azuredeploy.local.parameters.json" />
     <None Include="azuredeploy.parameters.json" />
@@ -48,7 +49,9 @@
     <None Include="LICENSE" />
     <None Include="metadata.json" />
     <None Include="index.php" />
-    <None Include="nested\member\appgw-webappssl.json" />
+    <None Include="nested\shared\appgw.json" />
+    <None Include="nested\member\webapp.json" />
+    <None Include="azuredeploy-webapp.parameters.json" />
     <None Include="nested\shared\appplan.json" />
     <None Include="nested\shared\jumpbox.json" />
     <None Include="nested\shared\ase.json" />

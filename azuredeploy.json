@@ -1,8 +1,7 @@
-{
+﻿{
   "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-
     "aseLocation": {
       "type": "string",
       "allowedValues": [
@@ -74,12 +73,11 @@
         "description": "The Virtual IP of the App Service Environment's Internal Load Balancer. There is no easy way to obtain it post deployment, hence it is here. You may need to re-run the deployment after it is done to update this value."
       }
     },
-
     "aseName": {
       "type": "string",
       "defaultValue": "appgw-ase",
       "metadata": {
-        "description": "Name of the App Service Environment"
+        "description": "Name of the App Service Environment. Has to be unique within the region."
       }
     },
     "aseFrontEndSize": {
@@ -201,45 +199,108 @@
     "appgwSkuName": {
       "type": "string",
       "allowedValues": [
-        "Standard_Small",
-        "Standard_Medium",
-        "Standard_Large"
+        "WAF_Medium",
+        "WAF_Large"
       ],
-      "defaultValue": "Standard_Medium",
+      "defaultValue": "WAF_Medium",
       "metadata": {
         "description": "The SKU of the Application Gateway."
       }
     },
     "appgwCapacity": {
       "type": "int",
+      "allowedValues": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
       "defaultValue": 2,
       "metadata": {
         "description": "The number of instances running in the Application Gateway"
       }
     },
 
-    "pfxBase64": {
+    "wafMode": {
       "type": "string",
+      "allowedValues": [
+        "Detection",
+        "Prevention"
+      ],
+      "defaultValue": "Detection",
       "metadata": {
-        "description": "A pfx file encoded as a base-64 string.  The pfx contains the SSL certificate that will be configured as the default SSL certificate for the ASE and the AppGW for end-to-end SSL."
+        "description": "WAF Mode"
       }
     },
-    "pfxThumbprint": {
+    "wafRuleSetType": {
       "type": "string",
+      "allowedValues": [
+        "OWASP"
+      ],
+      "defaultValue": "OWASP",
       "metadata": {
-        "description": "The hexadecimal certificate thumbprint of the certificate contained in pfxBase64.  All spaces need to be removed from the hex string."
+        "description": "WAF Rule Set Type"
       }
     },
-    "pfxPassword": {
+    "wafRuleSetVersion": {
+      "type": "string",
+      "allowedValues": [
+        "2.2.9",
+        "3.0"
+      ],
+      "defaultValue": "3.0",
+      "metadata": {
+        "description": "WAF Rule Set Version"
+      }
+    },
+
+    "appgwPfxBase64": {
+      "type": "string",
+      "metadata": {
+        "description": "The Application Gateway pfx file encoded as a base-64 string.  The pfx contains the SSL certificate that will be configured as the SSL certificate for the AppGW for end-to-end SSL."
+      }
+    },
+    "appgwPfxThumbprint": {
+      "type": "string",
+      "metadata": {
+        "description": "The Application Gateway hexadecimal certificate thumbprint of the certificate contained in appgwPfxBase64.  All spaces need to be removed from the hex string."
+      }
+    },
+    "appgwPfxPassword": {
       "type": "securestring",
       "metadata": {
-        "description": "The password of the .pfx certificate"
+        "description": "The password of the Application Gateway .pfx certificate."
       }
     },
-    "cerBase64": {
+
+    "aseILBPfxBase64": {
       "type": "string",
       "metadata": {
-        "description": "The Base64 encoded string of your .cer certificate. That's the public part of your SSL certificate. You may use the DigiCert Certificate Utility https://www.digicert.com/util/pfx-certificate-management-utility-import-export-instructions.htm"
+        "description": "The App Service Environment pfx file encoded as a base-64 string.  The pfx contains the SSL certificate that will be configured as the SSL certificate for the ILB of the ASE."
+      }
+    },
+    "aseILBCerBase64": {
+      "type": "string",
+      "metadata": {
+        "description": "The App Service Environment cer file encoded as a base-64 string. This will be used to whitelist the ASE with the AppGW and encrypt the backend communication."
+      }
+    },
+    "aseILBPfxThumbprint": {
+      "type": "string",
+      "metadata": {
+        "description": "The App Service Environment  hexadecimal certificate thumbprint of the certificate contained in aseILBPfxBase64.  All spaces need to be removed from the hex string."
+      }
+    },
+    "aseILBPfxPassword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "The password of the App Service Environment .pfx certificate"
       }
     },
 
@@ -255,13 +316,15 @@
         "description": "Password for the BIND DNS Virtual Machine."
       }
     },
-    "scriptsLocation": {
+
+    "repositoryLocation": {
       "type": "string",
       "defaultValue": "https://raw.githubusercontent.com/sabbour/appgw-aseilbssl/master",
       "metadata": {
         "description": "Container in staging storage account to receive post-build staging folder upload"
       }
     },
+
     "customScriptTimestamp": {
       "type": "int",
       "defaultValue": 1,
@@ -274,593 +337,336 @@
     "vnetName": "appgw-vnet",
     "appgwName": "appgw",
     "bindVMName": "appgw-bind",
+    "jumpBoxVMName": "appgw-jumpbox",
     "appgwPublicIpName": "appgw-publicip",
     "bindNSGName": "appgw-bind-nsg",
     "appgwSubnetName": "appgw-subnet",
     "dnsSubnetName": "dns-subnet",
     "aseSubnetName": "ase-subnet",
-    "certificateName": "[concat(parameters('pfxThumbprint'),'_',parameters('aseName'),'_InternalLoadBalancingASE')]",
     "backendFQDN": "[concat(parameters('appName'),'.',parameters('aseDNSSuffix'))]",
     "apiVersion": "2017-03-01",
-    "vnetRef": "[resourceId('Microsoft.Network/virtualNetworks',variables('vnetName'))]",
-    "appgwSubnetRef": "[concat(variables('vnetRef'),'/subnets/',variables('appgwSubnetName'))]",
-    "dnsSubnetRef": "[concat(variables('vnetRef'), '/subnets/', variables('dnsSubnetName'))]",
+    "vnetRef": "[resourceId('Microsoft.Network/virtualNetworks/',variables('vnetName'))]",
+    "appgwSubnetRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets',variables('vnetName'),variables('appgwSubnetName'))]",
+    "dnsSubnetRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets',variables('vnetName'), variables('dnsSubnetName'))]",
     "appgwPublicIPRef": "[resourceId('Microsoft.Network/publicIPAddresses',variables('appgwPublicIpName'))]",
     "applicationGatewayRef": "[resourceId('Microsoft.Network/applicationGateways',variables('appgwName'))]",
     "aseRef": "[resourceId('Microsoft.Web/hostingEnvironments',parameters('aseName'))]",
-    "appPlanRef": "[resourceId('Microsoft.Web/serverFarms',parameters('appPlanName'))]",
-    "bindCommandToExecute": "",
-    "bindStorageType": "Standard_LRS",
-    "bindUbuntuOSVersion": "14.04.2-LTS",
-    "bindImagePublisher": "Canonical",
-    "bindImageOffer": "UbuntuServer",
-    "bindOSDiskName": "appgw-bindOSDisk",
-    "bindVmSize": "Standard_A1",
-    "bindNicName": "[concat(variables('bindVMName'), '-nic')]"
+    "appPlanRef": "[resourceId('Microsoft.Web/serverFarms',parameters('appPlanName'))]"
   },
-
   "resources": [
     {
-      "apiVersion": "[variables('apiVersion')]",
-      "type": "Microsoft.Network/virtualNetworks",
-      "name": "[variables('vnetName')]",
-      "location": "[resourceGroup().location]",
-      "tags": {
-        "displayName": "Virtual Network"
-      },
+      "name": "create-virtualnetwork",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2015-01-01",
       "properties": {
-        "addressSpace": {
-          "addressPrefixes": [
-            "[parameters('vnetAddressPrefix')]"
-          ]
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('repositoryLocation'), '/nested/shared/', 'virtualnetwork.json')]",
+          "contentVersion": "1.0.0.0"
         },
-        "dhcpOptions": {
-          "dnsServers": [ "[parameters('bindIp')]" ]
-        },
-        "subnets": [
-          {
-            "name": "[variables('appgwSubnetName')]",
-            "properties": {
-              "addressPrefix": "[parameters('appgwSubnetPrefix')]"
-            }
+        "parameters": {
+          "vnetName": {
+            "value": "[variables('vnetName')]"
           },
-          {
-            "name": "[variables('dnsSubnetName')]",
-            "properties": {
-              "addressPrefix": "[parameters('dnsSubnetPrefix')]"
-            }
+          "vnetAddressPrefix": {
+            "value": "[parameters('vnetAddressPrefix')]"
           },
-          {
-            "name": "[variables('aseSubnetName')]",
-            "properties": {
-              "addressPrefix": "[parameters('aseSubnetPrefix')]"
-            }
-          }
-        ]
-      }
-    },
-    {
-      "apiVersion": "[variables('apiVersion')]",
-      "type": "Microsoft.Network/publicIPAddresses",
-      "name": "[variables('appgwPublicIpName')]",
-      "location": "[resourceGroup().location]",
-      "properties": {
-        "publicIPAllocationMethod": "Dynamic"
-      },
-      "tags": {
-        "displayName": "AppGW public IP address"
-      }
-    },
-
-    {
-      "apiVersion": "[variables('apiVersion')]",
-      "name": "[variables('appgwName')]",
-      "type": "Microsoft.Network/applicationGateways",
-      "location": "[resourceGroup().location]",
-      "tags": {
-        "displayName": "Application Gateway"
-      },
-      "dependsOn": [
-        "[concat('Microsoft.Network/virtualNetworks/', variables('vnetName'))]",
-        "[concat('Microsoft.Network/publicIPAddresses/', variables('appgwPublicIpName'))]",
-        "[concat('Microsoft.Web/hostingEnvironments/', parameters('aseName'))]"
-      ],
-      "properties": {
-        "sku": {
-          "name": "[parameters('appgwSkuName')]",
-          "tier": "Standard",
-          "capacity": "[parameters('appgwCapacity')]"
-        },
-        "gatewayIPConfigurations": [
-          {
-            "name": "appgw_gatewayIpconfig",
-            "properties": {
-              "subnet": {
-                "id": "[variables('appgwSubnetRef')]"
-              }
-            }
-          }
-        ],
-        "frontendPorts": [
-          {
-            "name": "appgw_frontendPort_https_443",
-            "properties": {
-              "Port": 443
-            }
-          },
-          {
-            "name": "appgw_frontendPort_http_80",
-            "properties": {
-              "Port": 80
-            }
-          }
-        ],
-        "sslCertificates": [
-          {
-            "name": "sslcertificate",
-            "properties": {
-              "data": "[parameters('pfxBase64')]",
-              "password": "[parameters('pfxPassword')]"
-            }
-          }
-        ],
-        "authenticationCertificates": [
-          {
-            "name": "backend_whitelist_sslcertificate",
-            "properties": {
-              "data": "[parameters('cerBase64')]"
-            }
-          }
-        ],
-        "frontendIPConfigurations": [
-          {
-            "name": "appgw_frontendip",
-            "properties": {
-              "PublicIPAddress": {
-                "id": "[variables('appgwPublicIPRef')]"
-              }
-            }
-          }
-        ],
-        "probes": [
-          {
-            "name": "[concat(variables('backendFQDN'),'_probe_https')]",
-            "properties": {
-              "protocol": "Https",
-              "host": "[variables('backendFQDN')]",
-              "path": "/",
-              "interval": 30,
-              "timeout": 120,
-              "unhealthyThreshold": 8
-            }
-          },
-          {
-            "name": "[concat(variables('backendFQDN'),'_probe_http')]",
-            "properties": {
-              "protocol": "Http",
-              "host": "[variables('backendFQDN')]",
-              "path": "/",
-              "interval": 30,
-              "timeout": 120,
-              "unhealthyThreshold": 8
-            }
-          }
-        ],
-        "backendHttpSettingsCollection": [
-          {
-            "name": "[concat(variables('backendFQDN'),'_setting_http')]",
-            "properties": {
-              "Port": 80,
-              "Protocol": "Http",
-              "CookieBasedAffinity": "Disabled",
-              "probe": {
-                "id": "[concat(variables('applicationGatewayRef'), '/probes/', variables('backendFQDN'), '_probe_http')]"
-              }
-            }
-          },
-          {
-            "name": "[concat(variables('backendFQDN'),'_setting_https')]",
-            "properties": {
-              "Port": 443,
-              "Protocol": "Https",
-              "CookieBasedAffinity": "Disabled",
-              "probe": {
-                "id": "[concat(variables('applicationGatewayRef'), '/probes/', variables('backendFQDN'), '_probe_https')]"
-              },
-              "authenticationCertificates": [
-                {
-                  "id": "[concat(variables('applicationGatewayRef'), '/authenticationCertificates/backend_whitelist_sslcertificate')]"
+          "vnetSubnets": {
+            "value": [
+              {
+                "name": "[variables('appgwSubnetName')]",
+                "properties": {
+                  "addressPrefix": "[parameters('appgwSubnetPrefix')]"
                 }
-              ]
-            }
-          }
-        ],
-        "httpListeners": [
-          {
-            "name": "[concat(parameters('externalAppHostname'),'_listener_http')]",
-            "properties": {
-              "FrontendIPConfiguration": {
-                "Id": "[concat(variables('applicationGatewayRef'), '/frontendIPConfigurations/appgw_frontendip')]"
               },
-              "FrontendPort": {
-                "Id": "[concat(variables('applicationGatewayRef'), '/frontendPorts/appgw_frontendPort_http_80')]"
-              },
-              "Protocol": "Http",
-              "hostName": "[parameters('externalAppHostname')]",
-              "SslCertificate": null
-            }
-          },
-          {
-            "name": "[concat(parameters('externalAppHostname'),'_listener_https')]",
-            "properties": {
-              "FrontendIPConfiguration": {
-                "Id": "[concat(variables('applicationGatewayRef'), '/frontendIPConfigurations/appgw_frontendip')]"
-              },
-              "FrontendPort": {
-                "Id": "[concat(variables('applicationGatewayRef'), '/frontendPorts/appgw_frontendPort_https_443')]"
-              },
-              "Protocol": "Https",
-              "hostName": "[parameters('externalAppHostname')]",
-              "SslCertificate": {
-                "Id": "[concat(variables('applicationGatewayRef'), '/sslCertificates/sslcertificate')]"
-              },
-              "RequireServerNameIndication": "true"
-            }
-          }
-        ],
-        "backendAddressPools": [
-          {
-            "name": "[concat(variables('backendFQDN'),'_pool')]",
-            "properties": {
-              "BackendAddresses": [
-                {
-                  "IpAddress": "[parameters('aseVirtualIp')]"
+              {
+                "name": "[variables('dnsSubnetName')]",
+                "properties": {
+                  "addressPrefix": "[parameters('dnsSubnetPrefix')]"
                 }
-              ]
-            }
-          }
-        ],
-        "requestRoutingRules": [
-          {
-            "name": "[concat(variables('backendFQDN'),'_rule_http')]",
-            "properties": {
-              "RuleType": "Basic",
-              "httpListener": {
-                "id": "[concat(variables('applicationGatewayRef'), '/httpListeners/', parameters('externalAppHostname'),'_listener_http')]"
               },
-              "backendAddressPool": {
-                "id": "[concat(variables('applicationGatewayRef'), '/backendAddressPools/', variables('backendFQDN'),'_pool')]"
-              },
-              "backendHttpSettings": {
-                "id": "[concat(variables('applicationGatewayRef'), '/backendHttpSettingsCollection/', variables('backendFQDN'),'_setting_http')]"
+              {
+                "name": "[variables('aseSubnetName')]",
+                "properties": {
+                  "addressPrefix": "[parameters('aseSubnetPrefix')]"
+                }
               }
-            }
-          },
-          {
-            "name": "[concat(variables('backendFQDN'),'_rule_https')]",
-            "properties": {
-              "RuleType": "Basic",
-              "httpListener": {
-                "id": "[concat(variables('applicationGatewayRef'), '/httpListeners/', parameters('externalAppHostname'),'_listener_https')]"
-              },
-              "backendAddressPool": {
-                "id": "[concat(variables('applicationGatewayRef'), '/backendAddressPools/', variables('backendFQDN'),'_pool')]"
-              },
-              "backendHttpSettings": {
-                "id": "[concat(variables('applicationGatewayRef'), '/backendHttpSettingsCollection/', variables('backendFQDN'),'_setting_https')]"
-              }
-            }
+            ]
           }
-        ]
-      }
-    },
-    {
-      "apiVersion": "2016-03-01",
-      "type": "Microsoft.Web/hostingEnvironments",
-      "name": "[parameters('aseName')]",
-      "location": "[parameters('aseLocation')]",
-      "tags": {
-        "displayName": "App Service Environment"
-      },
-      "dependsOn": [
-        "[concat('Microsoft.Network/virtualNetworks/', variables('vnetName'))]",
-        "[concat('Microsoft.Compute/virtualMachines/', variables('bindVMName'))]",
-        "[concat('Microsoft.Compute/virtualMachines/', variables('bindVMName'), '/extensions/SetupBindCustomScript')]"
-      ],
-      "properties": {
-        "name": "[parameters('aseName')]",
-        "location": "[parameters('aseLocation')]",
-        "ipSslAddressCount": "0",
-        "internalLoadBalancingMode": "3",
-        "clusterSettings": [
-          {
-            "name": "DefaultSslCertificateThumbprint",
-            "value": "[parameters('pfxThumbprint')]"
-          }
-        ],
-        "dnsSuffix": "[parameters('aseDNSSuffix')]",
-        "virtualNetwork": {
-          "Id": "[variables('vnetRef')]",
-          "Subnet": "[variables('aseSubnetName')]"
-        },
-        "multiSize": "[parameters('aseFrontEndSize')]",
-        "multiRoleCount": "[parameters('aseFrontEndCount')]",
-        "workerPools": [
-          {
-            "workerSizeId": 0,
-            "workerSize": "[parameters('aseWorkerPoolOneInstanceSize')]",
-            "workerCount": "[parameters('aseWorkerPoolOneInstanceCount')]"
-          },
-          {
-            "workerSizeId": 1,
-            "workerSize": "[parameters('aseWorkerPoolTwoInstanceSize')]",
-            "workerCount": "[parameters('aseWorkerPoolTwoInstanceCount')]"
-          },
-          {
-            "workerSizeId": 2,
-            "workerSize": "[parameters('aseWorkerPoolThreeInstanceSize')]",
-            "workerCount": "[parameters('aseWorkerPoolThreeInstanceCount')]"
-          }
-        ]
-      }
-    },
-
-    {
-      "name": "[parameters('appPlanName')]",
-      "type": "Microsoft.Web/serverfarms",
-      "location": "[resourceGroup().location]",
-      "apiVersion": "2016-09-01",
-      "dependsOn": [
-        "[concat('Microsoft.Web/hostingEnvironments/', parameters('aseName'))]"
-      ],
-      "tags": {
-        "displayName": "App Service Plan"
-      },
-      "properties": {
-        "name": "[parameters('appPlanName')]",
-        "workerSize": 1,
-        "numberOfWorkers": 1,
-        "hostingEnvironment": "[parameters('aseName')]",
-        "hostingEnvironmentId": "[variables('applicationGatewayRef')]"
-      },
-      "sku": {
-        "Tier": "Premium",
-        "Name": "P1"
-      },
-      "resources": [
-        {
-          "name": "[parameters('appName')]",
-          "type": "Microsoft.Web/sites",
-          "kind": "app",
-          "location": "[resourceGroup().location]",
-          "apiVersion": "2016-08-01",
-          "dependsOn": [
-            "[resourceId('Microsoft.Web/serverfarms', parameters('appPlanName'))]"
-          ],
-          "tags": {
-            "displayName": "Web App"
-          },
-          "properties": {
-            "name": "[parameters('appName')]",
-            "serverFarmId": "[variables('appPlanRef')]"
-          },
-          "resources": [
-            {
-              "type": "Microsoft.Web/sites/hostnameBindings",
-              "name": "[concat(parameters('appName'), '/', parameters('externalAppHostname'))]",
-              "apiVersion": "2016-03-01",
-              "tags": {
-                "displayName": "Custom Domain"
-              },
-              "properties": {
-                "sslState": "SniEnabled",
-                "thumbprint": "[reference(resourceId('Microsoft.Web/certificates', variables('certificateName'))).Thumbprint]"
-              },
-              "dependsOn": [
-                "[concat('Microsoft.Web/sites/',parameters('appName'))]",
-                "[concat('Microsoft.Web/certificates/',variables('certificateName'))]"
-              ]
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "apiVersion": "2016-03-01",
-      "type": "Microsoft.Web/certificates",
-      "name": "[variables('certificateName')]",
-      "location": "[resourceGroup().location]",
-      "tags": {
-        "displayName": "SSL Certificate"
-      },
-      "dependsOn": [
-        "[concat('Microsoft.Web/hostingEnvironments/', parameters('aseName'))]"
-      ],
-      "properties": {
-        "pfxBlob": "[parameters('pfxBase64')]",
-        "password": "[parameters('pfxPassword')]",
-        "hostingEnvironmentProfile": {
-          "id": "[variables('aseRef')]"
         }
       }
     },
     {
-      "type": "Microsoft.Network/dnszones",
-      "name": "[parameters('rootZoneName')]",
-      "apiVersion": "2016-04-01",
-      "location": "global",
-      "tags": {},
-      "properties": {
-        "maxNumberOfRecordSets": 5000,
-        "numberOfRecordSets": 3
-      },
-      "dependsOn": []
-    },
-    {
-      "type": "Microsoft.Network/dnszones/A",
-      "name": "[concat(parameters('rootZoneName'),'/',parameters('appName'))]",
-      "apiVersion": "2016-04-01",
-      "properties": {
-        "TTL": 120,
-        "ARecords": [
-          {
-            "ipv4Address": "[reference(concat('Microsoft.Network/publicIPAddresses/', variables('appgwPublicIpName')), '2016-09-01').ipAddress]"
-          }
-        ]
-
-      },
+      "name": "create-bind",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2015-01-01",
       "dependsOn": [
-        "[resourceId('Microsoft.Network/dnszones', parameters('rootZoneName'))]",
-        "[resourceId('Microsoft.Network/publicIPAddresses', variables('appgwPublicIpName'))]",
-        "[resourceId('Microsoft.Network/applicationGateways',variables('appgwName'))]"
-      ]
-    },
-    {
-      "name": "[variables('bindVMName')]",
-      "type": "Microsoft.Compute/virtualMachines",
-      "location": "[resourceGroup().location]",
-      "apiVersion": "2016-04-30-preview",
-      "dependsOn": [
-        "[resourceId('Microsoft.Network/networkInterfaces', variables('bindNicName'))]"
+        "create-virtualnetwork"
       ],
-      "tags": {
-        "displayName": "appgw-bind"
-      },
       "properties": {
-        "hardwareProfile": {
-          "vmSize": "[variables('bindVmSize')]"
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('repositoryLocation'), '/nested/shared/', 'binddns.json')]",
+          "contentVersion": "1.0.0.0"
         },
-        "osProfile": {
-          "computerName": "[variables('bindVMName')]",
-          "adminUsername": "[parameters('bindUsername')]",
-          "adminPassword": "[parameters('bindPassword')]"
-        },
-        "storageProfile": {
-          "imageReference": {
-            "publisher": "[variables('bindImagePublisher')]",
-            "offer": "[variables('bindImageOffer')]",
-            "sku": "[variables('bindUbuntuOSVersion')]",
-            "version": "latest"
+        "parameters": {
+          "bindVMName": {
+            "value": "[variables('bindVMName')]"
           },
-          "osDisk": {
-            "name": "appgw-bind-osdisk",
-            "caching": "ReadWrite",
-            "createOption": "FromImage",
-            "managedDisk": {
-              "storageAccountType": "Standard_LRS"
-            }
-          }
-        },
-        "networkProfile": {
-          "networkInterfaces": [
-            {
-              "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('bindNicName'))]"
-            }
-          ]
-        }
-      },
-      "resources": [
-        {
-          "name": "SetupBindCustomScript",
-          "type": "extensions",
-          "location": "[resourceGroup().location]",
-          "apiVersion": "2016-03-30",
-          "dependsOn": [
-            "[resourceId('Microsoft.Compute/virtualMachines', variables('bindVMName'))]"
-          ],
-          "tags": {
-            "displayName": "SetupBindCustomScript"
+          "bindUsername": {
+            "value": "[parameters('bindUsername')]"
           },
-          "properties": {
-            "publisher": "Microsoft.OSTCExtensions",
-            "type": "CustomScriptForLinux",
-            "typeHandlerVersion": "1.4",
-            "autoUpgradeMinorVersion": true,
-            "settings": {
-              "fileUris": [
-                "[concat(parameters('scriptsLocation'), '/scripts/install-bind.sh')]",
-                "[concat(parameters('scriptsLocation'), '/scripts/named.conf.local')]",
-                "[concat(parameters('scriptsLocation'), '/scripts/named.conf.options')]",
-                "[concat(parameters('scriptsLocation'), '/scripts/resolv.conf')]",
-                "[concat(parameters('scriptsLocation'), '/scripts/zone.db')]"
-              ],
-              "commandToExecute": "[concat('sh install-bind.sh ', parameters('aseDNSSuffix'), ' ', parameters('aseVirtualIp'), ' ', parameters('bindIP'))]",
-              "timestamp": "[parameters('customScriptTimestamp')]"
-            }
+          "bindPassword": {
+            "value": "[parameters('bindPassword')]"
+          },
+          "bindIP": {
+            "value": "[parameters('bindIP')]"
+          },
+          "dnsSubnetRef": {
+            "value": "[variables('dnsSubnetRef')]"
+          },
+          "repositoryLocation": {
+            "value": "[parameters('repositoryLocation')]"
+          },
+          "aseDNSSuffix": {
+            "value": "[parameters('aseDNSSuffix')]"
+          },
+          "aseVirtualIP": {
+            "value": "[parameters('aseVirtualIp')]"
+          },
+          "customScriptTimestamp": {
+            "value": "[parameters('customScriptTimestamp')]"
           }
         }
-      ]
-    },
-
-    {
-      "type": "Microsoft.Network/networkSecurityGroups",
-      "name": "[variables('bindNSGName')]",
-      "apiVersion": "2016-03-30",
-      "location": "[resourceGroup().location]",
-      "tags": {
-        "displayName": "BIND DNS Network Security Group"
-      },
-      "properties": {
-        "securityRules": [
-        ]
-      },
-      "dependsOn": []
+      }
     },
     {
-      "name": "[variables('bindNicName')]",
-      "type": "Microsoft.Network/networkInterfaces",
-      "location": "[resourceGroup().location]",
-      "apiVersion": "2016-03-30",
+      "name": "update-virtualnetwork-dns",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2015-01-01",
       "dependsOn": [
-        "[resourceId('Microsoft.Network/virtualNetworks', variables('vnetName'))]",
-        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('bindNSGName'))]"
+        "create-bind"
       ],
-      "tags": {
-        "displayName": "bindNic"
-      },
       "properties": {
-        "ipConfigurations": [
-          {
-            "name": "ipconfig1",
-            "properties": {
-              "privateIPAllocationMethod": "Static",
-              "privateIpAddress": "[parameters('bindIP')]",
-              "subnet": {
-                "id": "[variables('dnsSubnetRef')]"
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('repositoryLocation'), '/nested/shared/', 'virtualnetwork.json')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "vnetName": {
+            "value": "[variables('vnetName')]"
+          },
+          "vnetAddressPrefix": {
+            "value": "[parameters('vnetAddressPrefix')]"
+          },
+          "vnetSubnets": {
+            "value": [
+              {
+                "name": "[variables('appgwSubnetName')]",
+                "properties": {
+                  "addressPrefix": "[parameters('appgwSubnetPrefix')]"
+                }
               },
-              "networkSecurityGroup": {
-                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('bindNSGName'))]"
+              {
+                "name": "[variables('dnsSubnetName')]",
+                "properties": {
+                  "addressPrefix": "[parameters('dnsSubnetPrefix')]"
+                }
+              },
+              {
+                "name": "[variables('aseSubnetName')]",
+                "properties": {
+                  "addressPrefix": "[parameters('aseSubnetPrefix')]"
+                }
               }
-            }
+            ]
+          },
+          "vnetDnsServers": {
+            "value": [
+              "[parameters('bindIp')]"
+            ]
           }
-        ]
+        }
+      }
+    },
+    {
+      "name": "create-jumpbox",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2015-01-01",
+      "dependsOn": [
+        "update-virtualnetwork-dns"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('repositoryLocation'), '/nested/shared/', 'jumpbox.json')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "vmName": {
+            "value": "[variables('jumpBoxVMName')]"
+          },
+          "vmUsername": {
+            "value": "[parameters('bindUsername')]"
+          },
+          "vmPassword": {
+            "value": "[parameters('bindPassword')]"
+          },
+          "dnsSubnetRef": {
+            "value": "[variables('dnsSubnetRef')]"
+          }
+        }
+      }
+    },
+    {
+      "name": "create-dnszone",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2015-01-01",
+      "dependsOn": [],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('repositoryLocation'), '/nested/shared/', 'dnszone.json')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "rootZoneName": {
+            "value": "[parameters('rootZoneName')]"
+          }
+        }
+      }
+    },
+    {
+      "name": "create-ase",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2015-01-01",
+      "dependsOn": [
+        "update-virtualnetwork-dns"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('repositoryLocation'), '/nested/shared/', 'ase.json')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "aseLocation": {
+            "value": "[parameters('aseLocation')]"
+          },
+          "aseName": {
+            "value": "[parameters('aseName')]"
+          },
+          "aseFrontEndSize": {
+            "value": "[parameters('aseFrontEndSize')]"
+          },
+          "aseFrontEndCount": {
+            "value": "[parameters('aseFrontEndCount')]"
+          },
+          "aseWorkerPoolOneInstanceSize": {
+            "value": "[parameters('aseWorkerPoolOneInstanceSize')]"
+          },
+          "aseWorkerPoolOneInstanceCount": {
+            "value": "[parameters('aseWorkerPoolOneInstanceCount')]"
+          },
+          "aseWorkerPoolTwoInstanceSize": {
+            "value": "[parameters('aseWorkerPoolTwoInstanceSize')]"
+          },
+          "aseWorkerPoolTwoInstanceCount": {
+            "value": "[parameters('aseWorkerPoolTwoInstanceCount')]"
+          },
+          "aseWorkerPoolThreeInstanceSize": {
+            "value": "[parameters('aseWorkerPoolThreeInstanceSize')]"
+          },
+          "aseWorkerPoolThreeInstanceCount": {
+            "value": "[parameters('aseWorkerPoolThreeInstanceCount')]"
+          },
+          "aseDNSSuffix": {
+            "value": "[parameters('aseDNSSuffix')]"
+          },
+          "vnetRef": {
+            "value": "[variables('vnetRef')]"
+          },
+          "aseSubnetName": {
+            "value": "[variables('aseSubnetName')]"
+          },
+          "pfxBase64": {
+            "value": "[parameters('aseILBPfxBase64')]"
+          },
+          "pfxPassword": {
+            "value": "[parameters('aseILBPfxPassword')]"
+          },
+          "pfxThumbprint": {
+            "value": "[parameters('aseILBPfxThumbprint')]"
+          }
+        }
+      }
+    },
+    {
+      "name": "create-appgw",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2015-01-01",
+      "dependsOn": [
+        "update-virtualnetwork-dns"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('repositoryLocation'), '/nested/shared/', 'appgw.json')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "vnetName": {
+            "value": "[variables('vnetName')]"
+          },
+          "appgwSubnetName": {
+            "value": "[variables('aseSubnetName')]"
+          },
+          "appgwName": {
+            "value": "[variables('appgwName')]"
+          },
+          "appgwSkuName": {
+            "value": "[parameters('appgwSkuName')]"
+          },
+          "appgwCapacity": {
+            "value": "[parameters('appgwCapacity')]"
+          },
+          "appgwPfxBase64": {
+            "value": "[parameters('appgwPfxBase64')]"
+          },
+          "appgwPfxPassword": {
+            "value": "[parameters('appgwPfxPassword')]"
+          }
+        }
+      }
+    },
+    {
+      "name": "create-appplan",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2015-01-01",
+      "dependsOn": [
+        "create-ase"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('repositoryLocation'), '/nested/shared/', 'appplan.json')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "appPlanName": {
+            "value": "[parameters('appPlanName')]"
+          },
+          "aseName": {
+            "value": "[parameters('aseName')]"
+          },
+          "applicationGatewayRef": {
+            "value": "[variables('applicationGatewayRef')]"
+          }
+        }
       }
     }
   ],
   "outputs": {
-    "ApplicationGatewayPublicIp": {
-      "type": "string",
-      "value": "[reference(concat('Microsoft.Network/publicIPAddresses/', variables('appgwPublicIpName')), '2016-09-01').ipAddress]"
-    },
-    "ApplicationGatewayHostname": {
-      "type": "string",
-      "value": "[reference(concat('Microsoft.Network/publicIPAddresses/', variables('appgwPublicIpName')), '2016-09-01').dnsSettings.fqdn]"
-    },
-    "AzureDNSNS1": {
-      "type": "string",
-      "value": "[reference(concat('Microsoft.Network/dnsZones/', parameters('rootZoneName')), '2016-04-01').nameServers[0]]"
-    },
-    "AzureDNSNS2": {
-      "type": "string",
-      "value": "[reference(concat('Microsoft.Network/dnsZones/', parameters('rootZoneName')), '2016-04-01').nameServers[1]]"
-    },
-    "AzureDNSNS3": {
-      "type": "string",
-      "value": "[reference(concat('Microsoft.Network/dnsZones/', parameters('rootZoneName')), '2016-04-01').nameServers[2]]"
-    },
-    "AzureDNSNS4": {
-      "type": "string",
-      "value": "[reference(concat('Microsoft.Network/dnsZones/', parameters('rootZoneName')), '2016-04-01').nameServers[3]]"
-    }
   }
 }
