@@ -126,7 +126,7 @@
         ],
         "sslCertificates": [
           {
-            "name": "sabbour.pw-frontend-sslcertificate",
+            "name": "wildcard-frontend-sslcertificate",
             "properties": {
               "data": "[parameters('appgwPfxBase64')]",
               "password": "[parameters('appgwPfxPassword')]"
