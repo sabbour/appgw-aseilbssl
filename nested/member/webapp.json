@@ -11,10 +11,10 @@
     "externalAppHostname": {
       "type": "string"
     },
-    "aseDNSSuffix": {
+    "aseILBCertificateThumbprint": {
       "type": "string"
     },
-    "aseILBCertificateThumbprint": {
+    "aseDNSSuffix": {
       "type": "string"
     }
   },
