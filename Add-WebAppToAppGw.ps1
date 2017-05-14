@@ -1,5 +1,5 @@
 # End-to-End SSL
-# .\Add-WebAppToAppGw.ps1 -ResourceGroupName "appgw-aseilbssl3" -ApplicationGatewayName "appgw" -BackendPoolName "ase_pool" -BackendIPAddress "172.16.3.9" -BackendFQDN "webapp1.internal.sabbour.pw" -WebappName "webapp1" -FrontendFQDN "ssle2e.sabbour.pw" -FrontendSSLCertificateName "wildcard-frontend-sslcertificate" -BackendWhitelistSSLCertificateFile "C:\Users\asabbour\Documents\Git\appgw-aseilbssl\certs\wildcard_sabbour_pw.cer" -SSLEndToEnd
+# .\Add-WebAppToAppGw.ps1 -ResourceGroupName "appgw-aseilbssl3" -ApplicationGatewayName "appgw" -BackendPoolName "ase_pool" -BackendIPAddress "172.16.3.9" -BackendFQDN "webapp1.internal.sabbour.pw" -WebappName "webapp1" -FrontendFQDN "ssle2e.sabbour.pw" -FrontendSSLCertificateName "wildcard-frontend-sslcertificate" -BackendSSLCertificateThumbprint "E9378D10723A3335556408F1FE4E56D81F501F86" -BackendWhitelistSSLCertificateFile "C:\Users\asabbour\Documents\Git\appgw-aseilbssl\certs\wildcard_sabbour_pw.cer" -SSLEndToEnd
 
 # SSL Termination
 # .\Add-WebAppToAppGw.ps1 -ResourceGroupName "appgw-aseilbssl3" -ApplicationGatewayName "appgw" -BackendPoolName "ase_pool" -BackendIPAddress "172.16.3.9" -BackendFQDN "webapp1.internal.sabbour.pw" -WebappName "webapp1" -FrontendFQDN "ssloffload.sabbour.pw" -FrontendSSLCertificateName "wildcard-frontend-sslcertificate" -SSLTermination
@@ -12,7 +12,8 @@ Param(
     [Parameter(Mandatory = $true)][string] $BackendFQDN,
     [Parameter(Mandatory = $true)][string] $WebappName,
     [Parameter(Mandatory = $true)][string] $FrontendFQDN,
-    [Parameter(Mandatory = $true)][string] $FrontendSSLCertificateName,
+    [Parameter(Mandatory = $false)][string] $FrontendSSLCertificateName,
+    [Parameter(Mandatory = $false)][string] $BackendSSLCertificateThumbprint,
     [Parameter(Mandatory = $false)] $BackendWhitelistSSLCertificateFile,
     [switch] $SSLOnly,
     [switch] $SSLEndToEnd,
@@ -286,6 +287,7 @@ if(!$frontendFQDNIsEnabled) {
     Write-Host -foregroundcolor Cyan "`tAdding '$FrontendFQDN' to HostNames"            
     $webapp.HostNames.Add($FrontendFQDN)
     $webapp = Set-AzureRmWebApp -ResourceGroupName $ResourceGroupName -Name $WebappName -HostNames $webapp.HostNames
+	New-AzureRmWebAppSSLBinding -ResourceGroupName $ResourceGroupName -WebAppName $WebappName -Thumbprint $BackendSSLCertificateThumbprint -Name $FrontendFQDN
 }
 else {
     Write-Host -foregroundcolor Green "`tHostname already enabled."  

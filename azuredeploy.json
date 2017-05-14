@@ -338,7 +338,7 @@
     "appgwName": "appgw",
     "bindVMName": "appgw-bind",
     "jumpBoxVMName": "appgw-jumpbox",
-    "appgwPublicIpName": "appgw-publicip",
+    "appgwPublicIpName": "[concat(variables('appgwName'), '-ip')]",
     "bindNSGName": "appgw-bind-nsg",
     "appgwSubnetName": "appgw-subnet",
     "dnsSubnetName": "dns-subnet",
@@ -696,6 +696,9 @@
           },
           "aseILBCertificateThumbprint": {
             "value": "[parameters('aseILBPfxThumbprint')]"
+          },
+          "aseDNSSuffix": {
+            "value": "[parameters('aseDNSSuffix')]"
           },
           "externalAppHostname": {
             "value": "[parameters('externalAppHostname')]"

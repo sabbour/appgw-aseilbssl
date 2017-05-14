@@ -11,6 +11,9 @@
     "externalAppHostname": {
       "type": "string"
     },
+    "aseDNSSuffix": {
+      "type": "string"
+    },
     "aseILBCertificateThumbprint": {
       "type": "string"
     }
@@ -41,6 +44,21 @@
           "apiVersion": "2016-03-01",
           "tags": {
             "displayName": "[concat('Custom Domain - ', parameters('externalAppHostname'))]"
+          },
+          "dependsOn": [
+            "[concat('Microsoft.Web/sites/',parameters('appName'))]"
+          ],
+          "properties": {
+            "sslState": "SniEnabled",
+            "thumbprint": "[parameters('aseILBCertificateThumbprint')]"
+          }
+        },
+        {
+          "type": "Microsoft.Web/sites/hostnameBindings",
+          "name": "[concat(parameters('appName'), '/', parameters('appName'), '.scm.', parameters('aseDNSSuffix'))]",
+          "apiVersion": "2016-03-01",
+          "tags": {
+            "displayName": "[concat('SCM - ', parameters('appName'), '.scm.', parameters('aseDNSSuffix'))]"
           },
           "dependsOn": [
             "[concat('Microsoft.Web/sites/',parameters('appName'))]"
