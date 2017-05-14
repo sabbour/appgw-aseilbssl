@@ -520,24 +520,6 @@
       }
     },
     {
-      "name": "create-dnszone",
-      "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2015-01-01",
-      "dependsOn": [],
-      "properties": {
-        "mode": "Incremental",
-        "templateLink": {
-          "uri": "[concat(parameters('repositoryLocation'), '/nested/shared/', 'dnszone.json')]",
-          "contentVersion": "1.0.0.0"
-        },
-        "parameters": {
-          "rootZoneName": {
-            "value": "[parameters('rootZoneName')]"
-          }
-        }
-      }
-    },
-    {
       "name": "create-ase",
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2015-01-01",
@@ -641,6 +623,32 @@
       }
     },
     {
+      "name": "create-dnszone",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2015-01-01",
+      "dependsOn": [
+        "create-appgw"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('repositoryLocation'), '/nested/shared/', 'dnszone.json')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "rootZoneName": {
+            "value": "[parameters('rootZoneName')]"
+          },
+          "appName": {
+            "value": "[parameters('appName')]"
+          },
+          "appgwPublicIpName": {
+            "value": "[variables('appgwPublicIpName')]"
+          }
+        }
+      }
+    },
+    {
       "name": "create-appplan",
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2015-01-01",
@@ -697,5 +705,29 @@
     }
   ],
   "outputs": {
+    "ApplicationGatewayPublicIp": {
+      "type": "string",
+      "value": "[reference(concat('Microsoft.Network/publicIPAddresses/', variables('appgwPublicIpName')), '2016-09-01').ipAddress]"
+    },
+    "ApplicationGatewayHostname": {
+      "type": "string",
+      "value": "[reference(concat('Microsoft.Network/publicIPAddresses/', variables('appgwPublicIpName')), '2016-09-01').dnsSettings.fqdn]"
+    },
+    "AzureDNSNS1": {
+      "type": "string",
+      "value": "[reference(concat('Microsoft.Network/dnsZones/', parameters('rootZoneName')), '2016-04-01').nameServers[0]]"
+    },
+    "AzureDNSNS2": {
+      "type": "string",
+      "value": "[reference(concat('Microsoft.Network/dnsZones/', parameters('rootZoneName')), '2016-04-01').nameServers[1]]"
+    },
+    "AzureDNSNS3": {
+      "type": "string",
+      "value": "[reference(concat('Microsoft.Network/dnsZones/', parameters('rootZoneName')), '2016-04-01').nameServers[2]]"
+    },
+    "AzureDNSNS4": {
+      "type": "string",
+      "value": "[reference(concat('Microsoft.Network/dnsZones/', parameters('rootZoneName')), '2016-04-01').nameServers[3]]"
+    }
   }
 }

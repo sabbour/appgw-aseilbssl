@@ -171,14 +171,7 @@
         ],
         "backendAddressPools": [
           {
-            "name": "placeholder_pool",
-            "properties": {
-              "BackendAddresses": [
-                {
-                  "IpAddress": "1.2.3.4"
-                }
-              ]
-            }
+            "name": "placeholder_pool"
           }
         ],
         "requestRoutingRules": [

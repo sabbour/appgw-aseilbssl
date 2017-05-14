@@ -56,9 +56,9 @@ $appgw = Get-AzureRmApplicationGateway -ResourceGroupName $ResourceGroupName -Na
 # Try to get the pool by name. If it doesn't exist, create it with its backend ip address
 Write-Host -foregroundcolor Yellow "Checking if Backend Pool '$BackendPoolName' exists"
 $pool = $appgw.BackendAddressPools | Where-Object {$_.Name -eq $BackendPoolName}
-if(!($pool)) {
+if(!$pool) {
     Write-Host -foregroundcolor Cyan "`tIt doesn't exist. Creating Backend Pool '$BackendPoolName'"        
-    $pool = New-AzureRmApplicationGatewayBackendAddressPool -Name $BackendPoolName -BackendIPAddresses $BackendIPAddress
+    $pool = New-AzureRmApplicationGatewayBackendAddressPool -Name $BackendPoolName
 }
 else {
     Write-Host -foregroundcolor Green "`tBackend Pool '$BackendPoolName' exists"  
@@ -71,6 +71,7 @@ if(!$backendAddressExists) {
     # Add the IP to the pool's Backend IPs
     Write-Host -foregroundcolor Cyan "`tAdding Backend IP '$BackendIPAddress' to Backend Pool '$BackendPoolName'"    
     $appgw = Add-AzureRmApplicationGatewayBackendAddressPool -ApplicationGateway $appgw -Name $BackendPoolName -BackendIPAddresses $BackendIPAddress
+	$pool = $appgw.BackendAddressPools | Where-Object {$_.Name -eq $BackendPoolName}
 }
 else {
     Write-Host -foregroundcolor Green "`tBackend Pool '$BackendPoolName' contains Backend IP '$BackendIPAddress'"  
@@ -110,6 +111,7 @@ if(!$SSLOnly) {
     if(!$probeHttp) {
         Write-Host -foregroundcolor Cyan "`t`tNo HTTP Probe exists for '$BackendFQDN'. Creating it."        
         $appgw = Add-AzureRmApplicationGatewayProbeConfig -ApplicationGateway $appgw -Name $backendHttpProbeName -Protocol Http -HostName $BackendFQDN -Path "/" -Interval 30 -Timeout 120 -UnhealthyThreshold 8
+		$probeHttp = $appgw.Probes | Where-Object {$backendHttpProbeName}
     }
     else {
         Write-Host -foregroundcolor Green "`t`tHTTP Probe exists for '$BackendFQDN'."  
