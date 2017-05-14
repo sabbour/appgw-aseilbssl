@@ -1,5 +1,8 @@
-# .\Add-WebAppToAppGw.ps1 -ResourceGroupName "appgw-aseilbssl3" -ApplicationGatewayName "appgw" -BackendPoolName "ase_pool" -BackendIPAddress "172.16.3.9" -BackendFQDN "webapp1.internal.sabbour.pw" -WebappName "webapp1" -FrontendFQDN "webapp1.sabbour.pw" -FrontendSSLCertificateName "sabbour.pw-frontend-sslcertificate" -BackendWhitelistSSLCertificateFile "C:\Users\asabbour\Documents\Git\appgw-aseilbssl\certs\wildcard_sabbour_pw.cer" -SSLEndToEnd
-# .\Add-WebAppToAppGw.ps1 -ResourceGroupName "appgw-aseilbssl3" -ApplicationGatewayName "appgw" -BackendPoolName "ase_pool" -BackendIPAddress "172.16.3.9" -BackendFQDN "webapp1.internal.sabbour.pw" -WebappName "webapp1" -FrontendFQDN "webapp2offload.sabbour.pw" -FrontendSSLCertificateName "sabbour.pw-frontend-sslcertificate" -SSLTermination
+# End-to-End SSL
+# .\Add-WebAppToAppGw.ps1 -ResourceGroupName "appgw-aseilbssl3" -ApplicationGatewayName "appgw" -BackendPoolName "ase_pool" -BackendIPAddress "172.16.3.9" -BackendFQDN "webapp1.internal.sabbour.pw" -WebappName "webapp1" -FrontendFQDN "ssle2e.sabbour.pw" -FrontendSSLCertificateName "wildcard-frontend-sslcertificate" -BackendWhitelistSSLCertificateFile "C:\Users\asabbour\Documents\Git\appgw-aseilbssl\certs\wildcard_sabbour_pw.cer" -SSLEndToEnd
+
+# SSL Termination
+# .\Add-WebAppToAppGw.ps1 -ResourceGroupName "appgw-aseilbssl3" -ApplicationGatewayName "appgw" -BackendPoolName "ase_pool" -BackendIPAddress "172.16.3.9" -BackendFQDN "webapp1.internal.sabbour.pw" -WebappName "webapp1" -FrontendFQDN "ssloffload.sabbour.pw" -FrontendSSLCertificateName "wildcard-frontend-sslcertificate" -SSLTermination
 
 Param(
     [Parameter(Mandatory = $true)][string] $ResourceGroupName,
