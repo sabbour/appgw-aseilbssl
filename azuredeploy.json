@@ -665,6 +665,35 @@
           }
         }
       }
+    },
+    {
+      "name": "create-webapp",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2015-01-01",
+      "dependsOn": [
+        "create-appplan"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('repositoryLocation'), '/nested/member/', 'webapp.json')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "appName": {
+            "value": "[parameters('appName')]"
+          },
+          "appplanName": {
+            "value": "[parameters('appplanName')]"
+          },
+          "aseILBCertificateThumbprint": {
+            "value": "[parameters('aseILBPfxThumbprint')]"
+          },
+          "externalAppHostname": {
+            "value": "[parameters('externalAppHostname')]"
+          }
+        }
+      }
     }
   ],
   "outputs": {

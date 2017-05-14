@@ -51,7 +51,7 @@
     <None Include="index.php" />
     <None Include="nested\shared\appgw.json" />
     <None Include="nested\member\webapp.json" />
-    <None Include="azuredeploy-webapp.parameters.json" />
+    <None Include="azuredeploy-webapp.local.parameters.json" />
     <None Include="nested\shared\appplan.json" />
     <None Include="nested\shared\jumpbox.json" />
     <None Include="nested\shared\ase.json" />
