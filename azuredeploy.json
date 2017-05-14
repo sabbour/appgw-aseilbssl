@@ -620,7 +620,7 @@
             "value": "[variables('vnetName')]"
           },
           "appgwSubnetName": {
-            "value": "[variables('aseSubnetName')]"
+            "value": "[variables('appgwSubnetName')]"
           },
           "appgwName": {
             "value": "[variables('appgwName')]"
