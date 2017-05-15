@@ -1,8 +1,8 @@
 # End-to-End SSL
-# .\Add-WebAppToAppGw.ps1 -ResourceGroupName "appgw-aseilbssl3" -ApplicationGatewayName "appgw" -BackendPoolName "ase_pool" -BackendIPAddress "172.16.3.9" -BackendFQDN "webapp1.internal.sabbour.pw" -WebappName "webapp1" -FrontendFQDN "ssle2e.sabbour.pw" -FrontendSSLCertificateName "wildcard-frontend-sslcertificate" -BackendSSLCertificateThumbprint "E9378D10723A3335556408F1FE4E56D81F501F86" -BackendWhitelistSSLCertificateFile "C:\Users\asabbour\Documents\Git\appgw-aseilbssl\certs\wildcard_sabbour_pw.cer" -SSLEndToEnd
+# .\Add-WebAppToAppGw.ps1 -ResourceGroupName "appgw-aseilbssl3" -ApplicationGatewayName "appgw" -BackendPoolName "ase_pool" -BackendIPAddress "172.16.3.9" -BackendFQDN "webapp1.internal.sabbour.pw" -WebappName "webapp1" -FrontendHost "ssle2e" -FrontendRootZoneName "sabbour.pw" -FrontendSSLCertificateName "wildcard-frontend-sslcertificate" -BackendSSLCertificateThumbprint "E9378D10723A3335556408F1FE4E56D81F501F86" -BackendWhitelistSSLCertificateFile "C:\Users\asabbour\Documents\Git\appgw-aseilbssl\certs\wildcard_sabbour_pw.cer" -SSLEndToEnd
 
 # SSL Termination
-# .\Add-WebAppToAppGw.ps1 -ResourceGroupName "appgw-aseilbssl3" -ApplicationGatewayName "appgw" -BackendPoolName "ase_pool" -BackendIPAddress "172.16.3.9" -BackendFQDN "webapp1.internal.sabbour.pw" -WebappName "webapp1" -FrontendFQDN "ssloffload.sabbour.pw" -FrontendSSLCertificateName "wildcard-frontend-sslcertificate" -SSLTermination
+# .\Add-WebAppToAppGw.ps1 -ResourceGroupName "appgw-aseilbssl3" -ApplicationGatewayName "appgw" -BackendPoolName "ase_pool" -BackendIPAddress "172.16.3.9" -BackendFQDN "webapp1.internal.sabbour.pw" -WebappName "webapp1" -FrontendHost "ssloffload" -FrontendRootZoneName "sabbour.pw" -FrontendSSLCertificateName "wildcard-frontend-sslcertificate" -SSLTermination
 
 Param(
     [Parameter(Mandatory = $true)][string] $ResourceGroupName,
@@ -11,7 +11,8 @@ Param(
     [Parameter(Mandatory = $true)][string] $BackendIPAddress,
     [Parameter(Mandatory = $true)][string] $BackendFQDN,
     [Parameter(Mandatory = $true)][string] $WebappName,
-    [Parameter(Mandatory = $true)][string] $FrontendFQDN,
+    [Parameter(Mandatory = $true)][string] $FrontendHost,
+    [Parameter(Mandatory = $true)][string] $FrontendRootZoneName,
     [Parameter(Mandatory = $false)][string] $FrontendSSLCertificateName,
     [Parameter(Mandatory = $false)][string] $BackendSSLCertificateThumbprint,
     [Parameter(Mandatory = $false)] $BackendWhitelistSSLCertificateFile,
@@ -292,6 +293,12 @@ if(!$frontendFQDNIsEnabled) {
 else {
     Write-Host -foregroundcolor Green "`tHostname already enabled."  
 }
+
+
+# Set DNS A records pointing the FQDN to the Frontend IP of the Application Gateway
+$appgwPublicIp = Get-AzureRmPublicIpAddress -ResourceGroupName $ResourceGroupNam | Where-Object {$_.Id -eq $appgw.FrontendIPConfigurations.PublicIpAddress.Id}
+Write-Host -foregroundcolor Cyan "`tSetting DNS A Record for '$FrontendHost' in zone '$FrontendRootZoneName' pointing to '$fipConfig.'"  
+New-AzureRmDnsRecordSet -Name $FrontendHost -RecordType A -ZoneName $FrontendRootZoneName -ResourceGroupName $ResourceGroupName -Ttl 3600 -DnsRecords (New-AzureRmDnsRecordConfig -IPv4Address $appgwPublicIp)
 
 
 # Update the configuration
