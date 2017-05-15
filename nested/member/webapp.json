@@ -61,7 +61,7 @@
           },
           "dependsOn": [
             "[concat('Microsoft.Web/sites/',parameters('appName'))]",
-            "[concat(parameters('appName'), '/', parameters('appName'), '.', parameters('aseDNSSuffix'))]"
+            "[concat('Microsoft.Web/sites/hostnameBindings/', parameters('appName'), '/', parameters('appName'), '.', parameters('aseDNSSuffix'))]"
           ],
           "properties": {
             "sslState": "SniEnabled",
