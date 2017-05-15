@@ -18,7 +18,8 @@ Param(
     [Parameter(Mandatory = $false)] $BackendWhitelistSSLCertificateFile,
     [switch] $SSLOnly,
     [switch] $SSLEndToEnd,
-    [switch] $SSLTermination
+    [switch] $SSLTermination,
+    [switch] $NoDNS
 )
 
 # Define names
@@ -295,11 +296,12 @@ else {
 }
 
 
-# Set DNS A records pointing the FQDN to the Frontend IP of the Application Gateway
-$appgwPublicIp = Get-AzureRmPublicIpAddress -ResourceGroupName $ResourceGroupNam | Where-Object {$_.Id -eq $appgw.FrontendIPConfigurations.PublicIpAddress.Id}
-Write-Host -foregroundcolor Cyan "`tSetting DNS A Record for '$FrontendHost' in zone '$FrontendRootZoneName' pointing to '$fipConfig.'"  
-New-AzureRmDnsRecordSet -Name $FrontendHost -RecordType A -ZoneName $FrontendRootZoneName -ResourceGroupName $ResourceGroupName -Ttl 3600 -DnsRecords (New-AzureRmDnsRecordConfig -IPv4Address $appgwPublicIp)
-
+# Set DNS A records pointing the FQDN to the Frontend IP of the Application Gateway, only if the NoDNS flag is not passed
+if(!$NoDNS) {
+	$appgwPublicIp = Get-AzureRmPublicIpAddress -ResourceGroupName $ResourceGroupNam | Where-Object {$_.Id -eq $appgw.FrontendIPConfigurations.PublicIpAddress.Id}
+	Write-Host -foregroundcolor Cyan "`tSetting DNS A Record for '$FrontendHost' in zone '$FrontendRootZoneName' pointing to '$fipConfig.'"  
+	New-AzureRmDnsRecordSet -Name $FrontendHost -RecordType A -ZoneName $FrontendRootZoneName -ResourceGroupName $ResourceGroupName -Ttl 3600 -DnsRecords (New-AzureRmDnsRecordConfig -IPv4Address $appgwPublicIp)
+}
 
 # Update the configuration
 Write-Host "`nUpdating Application Gateway configuration.."
