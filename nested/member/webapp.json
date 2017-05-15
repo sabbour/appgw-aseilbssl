@@ -19,7 +19,7 @@
     }
   },
   "variables": {
-    "appPlanId": "[resourceId(resourceGroup().name, 'Microsoft.Web/serverfarms', parameters('appplanName'))]",
+    "appPlanId": "[resourceId(resourceGroup().name, 'Microsoft.Web/serverfarms', parameters('appplanName'))]"
   },
   "resources": [
     {
@@ -35,40 +35,54 @@
       "properties": {
         "name": "[parameters('appName')]",
         "serverFarmId": "[variables('appPlanId')]"
+      }
+    },
+    {
+      "type": "Microsoft.Web/sites/hostnameBindings",
+      "name": "[concat(parameters('appName'), '/', parameters('appName'), '.', parameters('aseDNSSuffix'))]",
+      "apiVersion": "2016-03-01",
+      "tags": {
+        "displayName": "[concat('Internal - ', parameters('appName'), '.', parameters('aseDNSSuffix'))]"
       },
-      "resources": [
-        {
-          "type": "Microsoft.Web/sites/hostnameBindings",
-          "name": "[concat(parameters('appName'), '/', parameters('externalAppHostname'))]",
-          "apiVersion": "2016-03-01",
-          "tags": {
-            "displayName": "[concat('Custom Domain - ', parameters('externalAppHostname'))]"
-          },
-          "dependsOn": [
-            "[concat('Microsoft.Web/sites/',parameters('appName'))]"
-          ],
-          "properties": {
-            "sslState": "SniEnabled",
-            "thumbprint": "[parameters('aseILBCertificateThumbprint')]"
-          }
-        },
-        {
-          "type": "Microsoft.Web/sites/hostnameBindings",
-          "name": "[concat(parameters('appName'), '/', parameters('appName'), '.', parameters('aseDNSSuffix'))]",
-          "apiVersion": "2016-03-01",
-          "tags": {
-            "displayName": "[concat('Internal - ', parameters('appName'), '.', parameters('aseDNSSuffix'))]"
-          },
-          "dependsOn": [
-            "[concat('Microsoft.Web/sites/',parameters('appName'))]",
-            "[concat('Microsoft.Web/sites/hostnameBindings/', parameters('appName'), '/', parameters('externalAppHostname'))]"
-          ],
-          "properties": {
-            "sslState": "SniEnabled",
-            "thumbprint": "[parameters('aseILBCertificateThumbprint')]"
-          }
-        }
-      ]
+      "dependsOn": [
+        "[concat('Microsoft.Web/sites/',parameters('appName'))]"
+      ],
+      "properties": {
+        "sslState": "SniEnabled",
+        "thumbprint": "[parameters('aseILBCertificateThumbprint')]"
+      }
+    },
+    {
+      "type": "Microsoft.Web/sites/hostnameBindings",
+      "name": "[concat(parameters('appName'), '/', parameters('externalAppHostname'))]",
+      "apiVersion": "2016-03-01",
+      "tags": {
+        "displayName": "[concat('Custom Domain - ', parameters('externalAppHostname'))]"
+      },
+      "dependsOn": [
+        "[concat('Microsoft.Web/sites/',parameters('appName'))]",
+        "[concat('Microsoft.Web/sites/',parameters('appName'),'/hostnameBindings/', parameters('appName'), '.', parameters('aseDNSSuffix'))]"
+      ],
+      "properties": {
+        "sslState": "SniEnabled",
+        "thumbprint": "[parameters('aseILBCertificateThumbprint')]"
+      }
+    },
+    {
+      "type": "Microsoft.Web/sites/hostnameBindings",
+      "name": "[concat(parameters('appName'), '/', parameters('appName'), '.scm.sabbour.pw')]",
+      "apiVersion": "2016-03-01",
+      "tags": {
+        "displayName": "[concat('Internal SCM - ', parameters('appName'), '.scm.sabbour.pw')]"
+      },
+      "dependsOn": [
+        "[concat('Microsoft.Web/sites/',parameters('appName'))]",
+        "[concat('Microsoft.Web/sites/',parameters('appName'),'/hostnameBindings/', parameters('externalAppHostname'))]"
+      ],
+      "properties": {
+        "sslState": "SniEnabled",
+        "thumbprint": "[parameters('aseILBCertificateThumbprint')]"
+      }
     }
   ],
   "outputs": {

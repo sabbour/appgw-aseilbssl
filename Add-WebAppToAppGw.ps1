@@ -23,19 +23,23 @@ Param(
 )
 
 # Define names
+$FrontendFQDN = $FrontendHost+"."+$FrontendRootZoneName
 $frontendPortHttpName = "appgw-frontendPort-http"
 $frontendPortHttpsName = "appgw-frontendPort-https"
 $fqdnListnerHttpName = "${FrontendFQDN}-listener-http"
 $fqdnListnerHttpsName = "${FrontendFQDN}-listener-https"
-$backendSettingHttpName = "${BackendFQDN}-setting-http"
-$backendSettingHttpsName = "${BackendFQDN}-setting-https"
-$backendHttpProbeName = "${BackendFQDN}-probe-http"
-$backendHttpsProbeName = "${BackendFQDN}-probe-https"
-$backendHttpSettingName = "${BackendFQDN}-backendsetting-http"
-$backendHttpsSettingName = "${BackendFQDN}-backendsetting-https"
+$backendHttpProbeName = "${FrontendFQDN}-${BackendFQDN}-probe-http"
+$backendHttpsProbeName = "${FrontendFQDN}-${BackendFQDN}-probe-https"
+$backendHttpSettingName = "${FrontendFQDN}-${BackendFQDN}-backendsetting-http"
+$backendHttpsSettingName = "${FrontendFQDN}-${BackendFQDN}-backendsetting-https"
 $backendHttpRuleName = "${FrontendFQDN}-${BackendFQDN}-rule-http"
 $backendHttpsRuleName = "${FrontendFQDN}-${BackendFQDN}-rule-https"
 $backendHttpsTerminationRuleName = "${FrontendFQDN}-${BackendFQDN}-rule-offload-https"
+
+$placeholderBackendPoolName = "placeholder_pool"
+$placeholderHttpSettingName = "placeholder-setting-http"
+$placeholderHttpListenerName = "placeholder-listener-http"
+$placeholderHttpRuleName = "placeholder-rule"
 
 # Load the application gateway
 Write-Host -foregroundcolor Magenta "SSL Only switch: $SSLOnly"
@@ -55,6 +59,50 @@ if($SSLEndToEnd -and $SSLTermination) {
 
 Write-Host "Getting Application Gateway '$ApplicationGatewayName' details`n"
 $appgw = Get-AzureRmApplicationGateway -ResourceGroupName $ResourceGroupName -Name $ApplicationGatewayName -ErrorAction Stop
+
+# Clean up the placeholder Backend Pool created with the ARM template, as it will interfere with the proper operations
+Write-Host -foregroundcolor Yellow "Checking if Placeholder Backend Pool '$placeholderBackendPoolName' exists"
+$placeholderPool = $appgw.BackendAddressPools | Where-Object {$_.Name -eq $placeholderBackendPoolName}
+if($placeholderPool) {
+    Write-Host -foregroundcolor Cyan "`tIt exist. Deleting it."  
+	$appgw = Remove-AzureRmApplicationGatewayBackendAddressPool -ApplicationGateway $appgw -Name $placeholderBackendPoolName
+}
+else {
+    Write-Host -foregroundcolor Green "`tBackend Pool '$placeholderBackendPoolName' doesn't exist. Moving on."  
+}
+
+# Clean up the placeholder Http Setting created with the ARM template, as it will interfere with the proper operations
+Write-Host -foregroundcolor Yellow "Checking if Placeholder HTTP Setting '$placeholderHttpSettingName' exists"
+$placeholderHttpSetting = $appgw.BackendHttpSettingsCollection | Where-Object {$_.Name -eq $placeholderHttpSettingName}
+if($placeholderHttpSetting) {
+    Write-Host -foregroundcolor Cyan "`tIt exist. Deleting it."  
+	$appgw = Remove-AzureRmApplicationGatewayBackendHttpSettings -ApplicationGateway $appgw -Name $placeholderHttpSettingName
+}
+else {
+    Write-Host -foregroundcolor Green "`tHTTP Setting '$placeholderBackendPoolName' doesn't exist. Moving on."  
+}
+
+# Clean up the placeholder Http Listener created with the ARM template, as it will interfere with the proper operations
+Write-Host -foregroundcolor Yellow "Checking if Placeholder HTTP Listener '$placeholderHttpListenerName' exists"
+$placeholderHttpListener = $appgw.HttpListeners | Where-Object {$_.Name -eq $placeholderHttpListenerName}
+if($placeholderHttpListener) {
+    Write-Host -foregroundcolor Cyan "`tIt exist. Deleting it."  
+	$appgw = Remove-AzureRmApplicationGatewayHttpListener -ApplicationGateway $appgw -Name $placeholderHttpListenerName
+}
+else {
+    Write-Host -foregroundcolor Green "`tHTTP Listener '$placeholderHttpListenerName' doesn't exist. Moving on."  
+}
+
+# Clean up the placeholder Request Routing Rule created with the ARM template, as it will interfere with the proper operations
+Write-Host -foregroundcolor Yellow "Checking if Placeholder Request Routing Rule '$placeholderHttpRuleName' exists"
+$placeholderRule = $appgw.RequestRoutingRules | Where-Object {$_.Name -eq $placeholderHttpRuleName}
+if($placeholderRule) {
+    Write-Host -foregroundcolor Cyan "`tIt exist. Deleting it."  
+	$appgw = Remove-AzureRmApplicationGatewayRequestRoutingRule -ApplicationGateway $appgw -Name $placeholderHttpRuleName
+}
+else {
+    Write-Host -foregroundcolor Green "`tRequest Routing Rule '$placeholderHttpRuleName' doesn't exist. Moving on."  
+}
 
 # Try to get the pool by name. If it doesn't exist, create it with its backend ip address
 Write-Host -foregroundcolor Yellow "Checking if Backend Pool '$BackendPoolName' exists"
@@ -134,10 +182,10 @@ if(!$SSLOnly) {
     }
 
      # Finally, create the rule if it doesn't exist
-    Write-Host -foregroundcolor Yellow "`tChecking if Request Routing Rule exists for the pool, setting and listener."
+    Write-Host -foregroundcolor Yellow "`tChecking if Request Routing Rule exists for the pool, listener and backend setting combination."
     $ruleHttp = $appgw.RequestRoutingRules | Where-Object {$_.Name -eq $backendHttpRuleName}
     if(!$ruleHttp) {
-        Write-Host -foregroundcolor Cyan "`t`tNo Request Routing Rule exists for the pool, setting and listener. Creating it."        
+        Write-Host -foregroundcolor Cyan "`t`tNo Request Routing Rule exists for the pool, listener and backend setting combination. Creating it."        
         $appgw = Add-AzureRmApplicationGatewayRequestRoutingRule -ApplicationGateway $appgw -Name $backendHttpRuleName -RuleType basic -BackendHttpSettings $backendSettingHttp -HttpListener $listenerHttp -BackendAddressPool $pool    
         $ruleHttp = $appgw.RequestRoutingRules | Where-Object {$_.Name -eq $backendHttpRuleName}
     }
@@ -225,10 +273,10 @@ if($SSLEndToEnd -or $SSLTermination) {
         }
 
         # Finally, create the rule if it doesn't exist
-        Write-Host -foregroundcolor Yellow "`t`tChecking if Request Routing Rule exists for the pool, setting and listener."
+        Write-Host -foregroundcolor Yellow "`t`tChecking if Request Routing Rule exists for the pool, listener and backend setting combination."
         $ruleHttps = $appgw.RequestRoutingRules | Where-Object {$_.Name -eq $backendHttpsRuleName}
         if(!$ruleHttps) {
-            Write-Host -foregroundcolor Cyan "`t`t`tNo Request Routing Rule exists for the pool, setting and listener. Creating it."        
+            Write-Host -foregroundcolor Cyan "`t`t`tNo Request Routing Rule exists for the pool, listener and backend setting combination. Creating it."        
             $appgw = Add-AzureRmApplicationGatewayRequestRoutingRule -ApplicationGateway $appgw -Name $backendHttpsRuleName -RuleType basic -BackendHttpSettings $backendSettingHttps -HttpListener $listenerHttps -BackendAddressPool $pool    
             $ruleHttps = $appgw.RequestRoutingRules | Where-Object {$_.Name -eq $backendHttpsRuleName}
         }
@@ -268,10 +316,10 @@ if($SSLEndToEnd -or $SSLTermination) {
         }
 
         # Finally, create the rule if it doesn't exist
-        Write-Host -foregroundcolor Yellow "`t`tChecking if Request Routing Rule exists for the pool, setting and listener."
+        Write-Host -foregroundcolor Yellow "`t`tChecking if Request Routing Rule exists for the pool, listener and backend setting combination."
         $ruleHttpOffload = $appgw.RequestRoutingRules | Where-Object {$_.Name -eq $backendHttpsTerminationRuleName}
         if(!$ruleHttpOffload) {
-            Write-Host -foregroundcolor Cyan "`t`t`tNo Request Routing Rule exists for the pool, setting and listener. Creating it."        
+            Write-Host -foregroundcolor Cyan "`t`t`tNo Request Routing Rule exists for the pool, listener and backend setting combination. Creating it."        
             $appgw = Add-AzureRmApplicationGatewayRequestRoutingRule -ApplicationGateway $appgw -Name $backendHttpsTerminationRuleName -RuleType basic -BackendHttpSettings $backendSettingHttp -HttpListener $listenerHttps -BackendAddressPool $pool    
             $ruleHttpOffload = $appgw.RequestRoutingRules | Where-Object {$_.Name -eq $backendHttpsTerminationRuleName}
         }
@@ -289,18 +337,37 @@ if(!$frontendFQDNIsEnabled) {
     Write-Host -foregroundcolor Cyan "`tAdding '$FrontendFQDN' to HostNames"            
     $webapp.HostNames.Add($FrontendFQDN)
     $webapp = Set-AzureRmWebApp -ResourceGroupName $ResourceGroupName -Name $WebappName -HostNames $webapp.HostNames
+    Write-Host -foregroundcolor Cyan "`tConfiguring SSL Binding for '$FrontendFQDN'" 
 	New-AzureRmWebAppSSLBinding -ResourceGroupName $ResourceGroupName -WebAppName $WebappName -Thumbprint $BackendSSLCertificateThumbprint -Name $FrontendFQDN
 }
 else {
     Write-Host -foregroundcolor Green "`tHostname already enabled."  
 }
 
+# Make sure that the web app has the SSL Binding for the domain, in case we're using End-to-End SSL
+if($SSLEndToEnd) {
+	Write-Host -foregroundcolor Yellow "`nMaking sure the Azure Web App has an SSL Binding for '$FrontendFQDN'.."
+	$sslBinding = Get-AzureRmWebAppSSLBinding -ResourceGroupName $ResourceGroupName -WebappName $WebappName -Name $FrontendFQDN
+	if(!$sslBinding) {
+		Write-Host -foregroundcolor Cyan "`tConfiguring SSL Binding for '$FrontendFQDN'"        
+		$sslBinding = New-AzureRmWebAppSSLBinding -ResourceGroupName $ResourceGroupName -WebAppName $WebappName -Thumbprint $BackendSSLCertificateThumbprint -Name $FrontendFQDN
+	}
+	else {
+		Write-Host -foregroundcolor Green "`tSSL Binding already exists."  
+	}
+}
 
 # Set DNS A records pointing the FQDN to the Frontend IP of the Application Gateway, only if the NoDNS flag is not passed
 if(!$NoDNS) {
-	$appgwPublicIp = Get-AzureRmPublicIpAddress -ResourceGroupName $ResourceGroupNam | Where-Object {$_.Id -eq $appgw.FrontendIPConfigurations.PublicIpAddress.Id}
-	Write-Host -foregroundcolor Cyan "`tSetting DNS A Record for '$FrontendHost' in zone '$FrontendRootZoneName' pointing to '$fipConfig.'"  
-	New-AzureRmDnsRecordSet -Name $FrontendHost -RecordType A -ZoneName $FrontendRootZoneName -ResourceGroupName $ResourceGroupName -Ttl 3600 -DnsRecords (New-AzureRmDnsRecordConfig -IPv4Address $appgwPublicIp)
+	Write-Host -foregroundcolor Yellow "`nChecking if there is an A Record for '$FrontendHost' in zone '$FrontendRootZoneName'"
+	$aRecord = Get-AzureRmDnsRecordSet -ResourceGroupName $ResourceGroupName -RecordType A -Name $FrontendHost -ZoneName $FrontendRootZoneName
+	if(!$aRecord) {
+		Write-Host -foregroundcolor Cyan "`tSetting DNS A Record for '$FrontendHost' in zone '$FrontendRootZoneName'"  
+		New-AzureRmDnsRecordSet -Name $FrontendHost -RecordType A -ZoneName $FrontendRootZoneName -ResourceGroupName $ResourceGroupName -Ttl 3600 -DnsRecords (New-AzureRmDnsRecordConfig -IPv4Address $appgwPublicIp.IpAddress)
+	}
+	else {
+		Write-Host -foregroundcolor Green "`tA Record already exists."  
+	}
 }
 
 # Update the configuration
