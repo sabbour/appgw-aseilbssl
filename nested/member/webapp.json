@@ -58,7 +58,7 @@
           "name": "[concat(parameters('appName'), '/', parameters('appName'), '.', parameters('aseDNSSuffix'))]",
           "apiVersion": "2016-03-01",
           "tags": {
-            "displayName": "[concat('Internal - ', parameters('appName'), '.scm.', parameters('aseDNSSuffix'))]"
+            "displayName": "[concat('Internal - ', parameters('appName'), '.', parameters('aseDNSSuffix'))]"
           },
           "dependsOn": [
             "[concat('Microsoft.Web/sites/',parameters('appName'))]"

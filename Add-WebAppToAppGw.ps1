@@ -293,6 +293,7 @@ else {
     Write-Host -foregroundcolor Green "`tHostname already enabled."  
 }
 
+
 # Update the configuration
 Write-Host "`nUpdating Application Gateway configuration.."
 $appgw = $appgw | Set-AzureRmApplicationGateway

@@ -638,12 +638,6 @@
         "parameters": {
           "rootZoneName": {
             "value": "[parameters('rootZoneName')]"
-          },
-          "appName": {
-            "value": "[parameters('appName')]"
-          },
-          "appgwPublicIpName": {
-            "value": "[variables('appgwPublicIpName')]"
           }
         }
       }
