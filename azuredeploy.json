@@ -708,29 +708,6 @@
     }
   ],
   "outputs": {
-    "ApplicationGatewayPublicIp": {
-      "type": "string",
-      "value": "[reference(concat('Microsoft.Network/publicIPAddresses/', variables('appgwPublicIpName')), '2016-09-01').ipAddress]"
-    },
-    "ApplicationGatewayHostname": {
-      "type": "string",
-      "value": "[reference(concat('Microsoft.Network/publicIPAddresses/', variables('appgwPublicIpName')), '2016-09-01').dnsSettings.fqdn]"
-    },
-    "AzureDNSNS1": {
-      "type": "string",
-      "value": "[reference(concat('Microsoft.Network/dnsZones/', parameters('rootZoneName')), '2016-04-01').nameServers[0]]"
-    },
-    "AzureDNSNS2": {
-      "type": "string",
-      "value": "[reference(concat('Microsoft.Network/dnsZones/', parameters('rootZoneName')), '2016-04-01').nameServers[1]]"
-    },
-    "AzureDNSNS3": {
-      "type": "string",
-      "value": "[reference(concat('Microsoft.Network/dnsZones/', parameters('rootZoneName')), '2016-04-01').nameServers[2]]"
-    },
-    "AzureDNSNS4": {
-      "type": "string",
-      "value": "[reference(concat('Microsoft.Network/dnsZones/', parameters('rootZoneName')), '2016-04-01').nameServers[3]]"
-    }
+
   }
 }
