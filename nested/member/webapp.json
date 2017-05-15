@@ -67,21 +67,6 @@
             "sslState": "SniEnabled",
             "thumbprint": "[parameters('aseILBCertificateThumbprint')]"
           }
-        },
-        {
-          "type": "Microsoft.Web/sites/hostnameBindings",
-          "name": "[concat(parameters('appName'), '/', parameters('appName'), '.scm.', parameters('aseDNSSuffix'))]",
-          "apiVersion": "2016-03-01",
-          "tags": {
-            "displayName": "[concat('SCM - ', parameters('appName'), '.scm.', parameters('aseDNSSuffix'))]"
-          },
-          "dependsOn": [
-            "[concat('Microsoft.Web/sites/',parameters('appName'))]"
-          ],
-          "properties": {
-            "sslState": "SniEnabled",
-            "thumbprint": "[parameters('aseILBCertificateThumbprint')]"
-          }
         }
       ]
     }
