@@ -3,16 +3,19 @@
   "contentVersion": "1.0.0.0",
   "parameters": {
     "appName": {
-      "value": "webapp3"
+      "value": "webapp1"
     },
     "appplanName": {
       "value": "appgw-ase-plan"
     },
     "externalAppHostname": {
-      "value": "webapp4.sabbour.pw"
+      "value": "webapp1.sabbour.pw"
     },
     "aseILBCertificateThumbprint": {
       "value": "E9378D10723A3335556408F1FE4E56D81F501F86"
-    }
+    },
+      "aseDNSSuffix": {
+          "value": "internal.sabbour.pw"
+      }
   }
 }
