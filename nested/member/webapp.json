@@ -67,22 +67,6 @@
         "sslState": "SniEnabled",
         "thumbprint": "[parameters('aseILBCertificateThumbprint')]"
       }
-    },
-    {
-      "type": "Microsoft.Web/sites/hostnameBindings",
-      "name": "[concat(parameters('appName'), '/', parameters('appName'), '.scm.sabbour.pw')]",
-      "apiVersion": "2016-03-01",
-      "tags": {
-        "displayName": "[concat('Internal SCM - ', parameters('appName'), '.scm.sabbour.pw')]"
-      },
-      "dependsOn": [
-        "[concat('Microsoft.Web/sites/',parameters('appName'))]",
-        "[concat('Microsoft.Web/sites/',parameters('appName'),'/hostnameBindings/', parameters('externalAppHostname'))]"
-      ],
-      "properties": {
-        "sslState": "SniEnabled",
-        "thumbprint": "[parameters('aseILBCertificateThumbprint')]"
-      }
     }
   ],
   "outputs": {
