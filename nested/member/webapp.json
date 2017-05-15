@@ -20,7 +20,6 @@
   },
   "variables": {
     "appPlanId": "[resourceId(resourceGroup().name, 'Microsoft.Web/serverfarms', parameters('appplanName'))]",
-    "aseId": "[resourceId(resourceGroup().name, 'Microsoft.Web/hostingEnvironments', 'appgw-ase')]"
   },
   "resources": [
     {
