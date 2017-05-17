@@ -81,12 +81,13 @@ You'll only need to do this for the Internal Load Balancer certificate.
 
 ## Connecting to your App Service Environment
 + Once the environment is ready and the DNS propagates, open http://yourappname.domain.com and https://yourappname.domain.com, both should work and the latter should be using End-to-End SSL. Note that the **REMOTE_ADDR** is actually the IP of the Application Gateway.
-![http-webapp1](images/http-webapp1.png)
-![https-webapp1](images/https-webapp1.png)
+![End to End SSL](images/endtoend.png)
+![SSL Offloading](images/ssloffload.png)
 
 + To access the Kudu console or FTP, they should be at the following endpoints. The FTP username/password are your Azure Subscription's deployment credentials. The username would be **yourappname\deploymentusername**
    + Kudu: **yourappname.scm.internal.domain.com**
-   + FTP: **ftp.internal.domain.com**
+   + FTP: **ftp.internal.domain.com**   
+	![Kudu](images/kudu.png)
 
 + Since the ASE is running behind an Internal Load Balancer, you can't access the endpoints above from outside the Virtual Network. You can either:
    + Use the "jump box" Virtual Machine that was created the Virtual Network and use it to access those endpoints. The username and password are the same as the BIND DNS Virtual Machine.

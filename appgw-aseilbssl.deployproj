@@ -44,8 +44,6 @@
     <None Include="images\customtemplate.png" />
     <None Include="images\diagram.pptx" />
     <None Include="images\domain-nameservers.png" />
-    <None Include="images\http-webapp1.png" />
-    <None Include="images\https-webapp1.png" />
     <None Include="LICENSE" />
     <None Include="metadata.json" />
     <None Include="index.php" />
