@@ -188,13 +188,6 @@
         "description": "The public hostname of the app to be deployed. Make sure that your SSL certificate works for this and that you can manage this domain's DNS."
       }
     },
-    "externalAppHostname": {
-      "type": "string",
-      "defaultValue": "webapp1.domain.com",
-      "metadata": {
-        "description": "The public hostname of the app to be deployed. Make sure that your SSL certificate works for this and that you can manage this domain's DNS."
-      }
-    },
 
     "appgwSkuName": {
       "type": "string",
@@ -686,9 +679,6 @@
           },
           "aseDNSSuffix": {
             "value": "[parameters('aseDNSSuffix')]"
-          },
-          "externalAppHostname": {
-            "value": "[parameters('externalAppHostname')]"
           }
         }
       }

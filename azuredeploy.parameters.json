@@ -20,9 +20,6 @@
     "rootZoneName": {
       "value": "domain.com"
     },
-    "externalAppHostname": {
-      "value": "app1.domain.com"
-    },
     "appName": {
       "value": "app1"
     },
