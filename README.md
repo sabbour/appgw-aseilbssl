@@ -42,7 +42,7 @@ $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($SecurePass
 $certificatePassword = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
 $cert = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2("certificate.pfx",$certificatePassword)
 [System.Convert]::ToBase64String($cert.GetRawCertData()) | Out-File "certificate.pfx.txt"
-[System.Convert]::ToBase64String($cert.Thumbprint) | Out-File "certificate.pfx_thumbprint.txt"
+$cert.Thumbprint | Out-File "wildcard_internal_sabbour_pw.pfx_thumbprint.txt"
 ```
 
 + Export CER without private key
