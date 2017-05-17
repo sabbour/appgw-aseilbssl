@@ -13,45 +13,19 @@ This template deploys an **App Service Environment + Application Gateway with En
 
 ## Solution overview and deployed resources
 
-![Solution overview](images/architecture1.png)
+![Solution overview](images/architecture.png)
 
 Note that this template assumes you will use Azure DNS to host your DNS. If you opt to host your domains elsewhere, please fork the template and comment out the relevant Azure DNS sections.
 
 ## Prerequisites
 
-Before you deploy the template, you need to have your SSL certificate around.
+Before you deploy the template, you need to have your 2 SSL certificates around.
+1. **Front-end SSL certificate:** This is the certificate that your end users will see in their browser. At minimum it should have Subject=*.domain.com
+2. **Back-end SSL certificate:** This is the certificate that will be used on the Internal Load Balancer. Your "internal" users will see this. At minimum it should have Subject=*.internal.domain.com and SAN=*.scm.internal.domain.com where **internal.domain.com** is your App Service Environment DNS suffix. It doesn't have to be from a root CA but it is recommended, otherwise users will see an SSL warning if they browse to the internal hostnames.
 
-For this to work smoothly, your certificate should have multiple Subject Alternate Names (SANs) corresponding to the list below. This will ensure a smooth end-to-end encryption experience.
-Note that in the context below, **internal.domain.com** refers to the App Service Environment DNS suffix you'll choose.
-+ *.domain.com
-+ domain.com
-+ *.scm.domain.com
-+ scm.domain.com
-+ *.internal.domain.com
-+ internal.domain.com
-+ *.scm.internal.domain.com
-+ scm.internal.domain.com
 
-You can use the PowerShell scripts below to convert the PFX (with private key) and CER (without private key) to Base64 text to add to the parameters.
-You'll find them in text files after you run the script.
-
-+ Export PFX with private key and the certificate thumbprint
-```PowerShell
-$SecurePassword = Read-Host -AsSecureString  "Enter Certificate password"
-$BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($SecurePassword)
-$certificatePassword = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
-$cert = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2("certificate.pfx",$certificatePassword)
-[System.Convert]::ToBase64String($cert.GetRawCertData()) | Out-File "certificate.pfx.txt"
-$cert.Thumbprint | Out-File "wildcard_internal_sabbour_pw.pfx_thumbprint.txt"
-```
-
-+ Export CER without private key
-```PowerShell
-$cer = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2
-$cer.Import("certificate.cer")
-$bin = $cer.GetRawCertData()
-[System.Convert]::ToBase64String($bin) | Out-File "certificate.cer.txt"
-```
+You can use the PowerShell scripts **Get-Base64FromPFX.ps1" to read the PFX certificate and convert it into Base64 encoded PFX (with private key) and CER (without private key) as well as spitting out the thumbprint.
+You'll only need to do this for the Internal Load Balancer certificate.
 
 ## Deployment steps
 
@@ -63,15 +37,40 @@ $bin = $cer.GetRawCertData()
 
 ## Post deployment
 
-+ You need to update the Backend Pool address in the Application Gateway with the App Service Environment ILB Virtual IP. For now, this is hardcoded in the template as 10.0.3.9 in the **aseVirtualIp** parameter as there is no easy way to obtain this value. If you don't change anything, you don't need to do this step. Otherwise, you'll need to change it post deployment or change it in the template after it is done and run it again. This should also reflect in the BIND DNS configuration.
-![ASE ILB VIP](images/ase-virtualip.png)
-![AppGW Backend Pool IP](images/appgw-backendpool.png)
-
-+ Update your domain name's nameservers to the ones from the template outputs if you're using Azure DNS, or use either ApplicationGatewayPublicIp or ApplicationGatewayHostname to setup an A record or CNAME for your domain if you're hosting the DNS elsewhere.  
-![ARM deployment outputs](images/arm-deploymentoutputs.png)
-![Nameserver setup](images/domain-nameservers.png)
-
-+ You can optionally enable the Web Application Firewall mode on the Application Gateway
++ Run the **Add-WebAppToAppGw.ps1" PowerShell script to finish the process. The script will provision the required listeners, certificates, probes, etc. in the Application Gateway as well as setting up the required Custom Domains in your Azure Web App in order to make this work.
++ For End-to-End SSL
+```PowerShell
+## End-to-End SSL
+ .\Add-WebAppToAppGw.ps1
+ -ResourceGroupName "rgname"
+ -ApplicationGatewayName "appgw-name"
+ -BackendPoolName "ase_pool"
+ -BackendIPAddress "172.16.3.9"
+ -BackendFQDN "webapp1.internal.domain.com"
+ -WebappName "webapp1"
+ -FrontendHost "webapp1endtoend"
+ -FrontendRootZoneName "domain.com"
+ -FrontendSSLCertificateName "domain.com-frontend-sslcertificate"
+ -FrontendSSLCertificatePath "path\to\wildcard_domain_com.pfx"
+ -BackendAuthenticationCertificateName "ase-ilb-public-certificate"
+ -SSLEndToEnd
+```
++ For SSL Termination on the Application Gateway
+```PowerShell
+## SSL Termination
+ .\Add-WebAppToAppGw.ps1
+ -ResourceGroupName "rgname"
+ -ApplicationGatewayName "appgw-name"
+ -BackendPoolName "ase_pool"
+ -BackendIPAddress "172.16.3.9"
+ -BackendFQDN "webapp1.internal.domain.com"
+ -WebappName "webapp1"
+ -FrontendHost "webapp1ssloffload"
+ -FrontendRootZoneName "domain.com"
+ -FrontendSSLCertificateName "domain.com-frontend-sslcertificate"
+ -FrontendSSLCertificatePath "path\to\wildcard_domain_com.pfx"
+ -SSLTermination
+```
 
 ## Connecting to your App Service Environment
 + Once the environment is ready and the DNS propagates, open http://yourappname.domain.com and https://yourappname.domain.com, both should work and the latter should be using End-to-End SSL. Note that the **REMOTE_ADDR** is actually the IP of the Application Gateway.
@@ -83,6 +82,6 @@ $bin = $cer.GetRawCertData()
    + FTP: ftp.internal.domain.com
 
 + Since the ASE is running behind an Internal Load Balancer, you can't access the endpoints above from outside the Virtual Network. You can either:
-   + Create a "jump box" Virtual Machine inside the Virtual Network and use it to access those endpoints
+   + Use the "jump box" Virtual Machine that was created the Virtual Network and use it to access those endpoints. The username and password are the same as the BIND DNS Virtual Machine.
    + Setup a Point-to-Site VPN connection to the Virtual Network and use it to get onto the network. More details here: https://docs.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-howto-point-to-site-resource-manager-portal
    + Setup a Site-to-Site/Express Route connection to the Virtual Network and use it to get onto the network. More details here: https://docs.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-howto-site-to-site-resource-manager-portal
