@@ -37,7 +37,9 @@ You'll only need to do this for the Internal Load Balancer certificate.
 
 ## Post deployment
 
-+ Run the **Add-WebAppToAppGw.ps1" PowerShell script to finish the process. The script will provision the required listeners, certificates, probes, etc. in the Application Gateway as well as setting up the required Custom Domains in your Azure Web App in order to make this work.
++ Run the **Add-WebAppToAppGw.ps1** PowerShell script to finish the process. The script will provision the required listeners, certificates, probes, etc. in the Application Gateway as well as setting up the required Custom Domains in your Azure Web App in order to make this work.
++ You need to set the parameters as per your envionment
++ If you didn't change the **BackendAuthenticationCertificateName** in the ARM template, then this value should still be **ase-ilb-public-certificate**
 + For End-to-End SSL
 ```PowerShell
 ## End-to-End SSL

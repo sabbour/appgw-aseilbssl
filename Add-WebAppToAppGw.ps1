@@ -49,7 +49,7 @@ Param(
     [Parameter(Mandatory = $true)][string] $FrontendRootZoneName,
     [Parameter(Mandatory = $false)][string] $FrontendSSLCertificateName,
     [Parameter(Mandatory = $false)][string] $FrontendSSLCertificatePath,
-    [Parameter(Mandatory = $false)][string] $BackendAuthenticationCertificateName,
+    [Parameter(Mandatory = $false)][string] $BackendAuthenticationCertificateName = "ase-ilb-public-certificate",
     [switch] $SSLOnly,
     [switch] $SSLEndToEnd,
     [switch] $SSLTermination,
