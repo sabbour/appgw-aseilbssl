@@ -79,9 +79,9 @@ You'll only need to do this for the Internal Load Balancer certificate.
 ![http-webapp1](images/http-webapp1.png)
 ![https-webapp1](images/https-webapp1.png)
 
-+ To access the Kudu console or FTP, they should be at the following endpoints
-   + Kudu: yourappname.scm.internal.domain.com
-   + FTP: ftp.internal.domain.com
++ To access the Kudu console or FTP, they should be at the following endpoints. The FTP username/password are your Azure Subscription's deployment credentials. The username would be **yourappname\deploymentusername**
+   + Kudu: **yourappname.scm.internal.domain.com**
+   + FTP: **ftp.internal.domain.com**
 
 + Since the ASE is running behind an Internal Load Balancer, you can't access the endpoints above from outside the Virtual Network. You can either:
    + Use the "jump box" Virtual Machine that was created the Virtual Network and use it to access those endpoints. The username and password are the same as the BIND DNS Virtual Machine.
