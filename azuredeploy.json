@@ -260,41 +260,22 @@
       }
     },
 
-    "appgwPfxBase64": {
-      "type": "string",
-      "metadata": {
-        "description": "The Application Gateway pfx file encoded as a base-64 string.  The pfx contains the SSL certificate that will be configured as the SSL certificate for the AppGW for end-to-end SSL."
-      }
-    },
-    "appgwPfxThumbprint": {
-      "type": "string",
-      "metadata": {
-        "description": "The Application Gateway hexadecimal certificate thumbprint of the certificate contained in appgwPfxBase64.  All spaces need to be removed from the hex string."
-      }
-    },
-    "appgwPfxPassword": {
-      "type": "securestring",
-      "metadata": {
-        "description": "The password of the Application Gateway .pfx certificate."
-      }
-    },
-
     "aseILBPfxBase64": {
       "type": "string",
       "metadata": {
-        "description": "The App Service Environment pfx file encoded as a base-64 string.  The pfx contains the SSL certificate that will be configured as the SSL certificate for the ILB of the ASE."
+        "description": "The App Service Environment pfx file encoded as a base-64 string. The certificate should have Subject=*.ase-subdomain.com, SAN=*.scm.ase-subdomain.com. The pfx contains the SSL certificate that will be configured as the SSL certificate for the ILB of the ASE."
       }
     },
     "aseILBCerBase64": {
       "type": "string",
       "metadata": {
-        "description": "The App Service Environment cer file encoded as a base-64 string. This will be used to whitelist the ASE with the AppGW and encrypt the backend communication."
+        "description": "The App Service Environment cer file encoded as a base-64 string. The certificate should have Subject=*.ase-subdomain.com, SAN=*.scm.ase-subdomain.com. This will be used to whitelist the ASE with the AppGW and encrypt the backend communication."
       }
     },
     "aseILBPfxThumbprint": {
       "type": "string",
       "metadata": {
-        "description": "The App Service Environment  hexadecimal certificate thumbprint of the certificate contained in aseILBPfxBase64.  All spaces need to be removed from the hex string."
+        "description": "The App Service Environment hexadecimal certificate thumbprint of the certificate contained in aseILBPfxBase64.  All spaces need to be removed from the hex string."
       }
     },
     "aseILBPfxPassword": {
@@ -613,11 +594,17 @@
           "appgwCapacity": {
             "value": "[parameters('appgwCapacity')]"
           },
-          "appgwPfxBase64": {
-            "value": "[parameters('appgwPfxBase64')]"
+          "backendCerBase64": {
+            "value": "[parameters('aseILBCerBase64')]"
           },
-          "appgwPfxPassword": {
-            "value": "[parameters('appgwPfxPassword')]"
+          "wafMode": {
+            "value": "[parameters('wafMode')]"
+          },
+          "wafRuleSetType": {
+            "value": "[parameters('wafRuleSetType')]"
+          },
+          "wafRuleSetVersion": {
+            "value": "[parameters('wafRuleSetVersion')]"
           }
         }
       }

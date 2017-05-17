@@ -5,35 +5,58 @@
     "aseLocation": {
       "value": "West Europe"
     },
-    "pfxBase64": {
-      "value": "Replace with base64 of pfx"
+    "aseILBPfxBase64": {
+      "value": "The App Service Environment pfx file encoded as a base-64 string."
     },
-    "cerBase64": {
-      "value": "Replace with base64 of cer"
+    "aseILBCerBase64": {
+      "value": "The App Service Environment cer file encoded as a base-64 string."
     },
-    "pfxThumbprint": {
-      "value": "Replace with pfx thumbprint"
+    "aseILBPfxThumbprint": {
+      "value": "The App Service Environment hexadecimal certificate thumbprint of the certificate contained in aseILBPfxBase64."
     },
-    "pfxPassword": {
-      "value": "Replace with pfx password"
+    "aseILBPfxPassword": {
+      "value": "The App Service Environment password of certificate contained in aseILBPfxBase64."
     },
     "rootZoneName": {
-      "value": "yourdomain.com"
+      "value": "domain.com"
     },
     "externalAppHostname": {
-      "value": "webapp1.yourdomain.com"
+      "value": "app1.domain.com"
     },
     "appName": {
-      "value": "webapp1"
+      "value": "app1"
     },
     "aseDNSSuffix": {
-      "value": "internal.yourdomain.com"
+      "value": "internal.domain.com"
     },
     "bindUsername": {
       "value": "azureuser"
     },
     "bindPassword": {
       "value": ""
+    },
+    "vnetAddressPrefix": {
+      "value": "172.16.0.0/16"
+    },
+    "appgwSubnetPrefix": {
+      "value": "172.16.1.0/24"
+    },
+    "dnsSubnetPrefix": {
+      "value": "172.16.2.0/24"
+    },
+    "aseSubnetPrefix": {
+      "value": "172.16.3.0/24"
+    },
+    "bindIp": {
+      "value": "172.16.2.50"
+    },
+    "aseVirtualIp": {
+      "value": "172.16.3.9"
+    },
+    "customScriptTimestamp": {
+      "value": 3
     }
   }
 }
+
+

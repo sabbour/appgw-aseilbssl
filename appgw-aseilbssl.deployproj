@@ -25,9 +25,10 @@
   <Import Condition=" Exists('$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Deployment\1.1\DeploymentProject.targets') " Project="$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Deployment\1.1\DeploymentProject.targets" />
   <!-- vertag<:>end -->
   <ItemGroup>
-    <Content Include="azuredeploy.json.old" />
+    <Content Include="azuredeploy-old.json" />
     <None Include="Add-WebAppToAppGw.ps1" />
     <None Include="appgw-aseilbssl.sln" />
+    <None Include="azuredeploy-old.local.parameters.json" />
     <None Include="azuredeploy.json" />
     <None Include="azuredeploy-webapp.json" />
     <None Include="azuredeploy.local.parameters.json" />
@@ -36,6 +37,7 @@
       <Visible>False</Visible>
     </None>
     <Content Include="Deploy-AzureResourceGroup.ps1" />
+    <None Include="Get-Base64FromPFX.ps1" />
     <None Include="images\appgw-backendpool.png" />
     <None Include="images\architecture.png" />
     <None Include="images\architecture1.png" />

@@ -265,3 +265,5 @@ __pycache__/
 certs/
 /azuredeploy.local.parameters.json
 /azuredeploy-webapp.local.parameters.json
+/azuredeploy-old.local.parameters.json
+/scenario.txt

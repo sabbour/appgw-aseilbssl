@@ -1,8 +1,42 @@
-# End-to-End SSL
-# .\Add-WebAppToAppGw.ps1 -ResourceGroupName "appgw-aseilbssl3" -ApplicationGatewayName "appgw" -BackendPoolName "ase_pool" -BackendIPAddress "172.16.3.9" -BackendFQDN "webapp1.internal.sabbour.pw" -WebappName "webapp1" -FrontendHost "ssle2e" -FrontendRootZoneName "sabbour.pw" -FrontendSSLCertificateName "wildcard-frontend-sslcertificate" -BackendSSLCertificateThumbprint "E9378D10723A3335556408F1FE4E56D81F501F86" -BackendWhitelistSSLCertificateFile "C:\Users\asabbour\Documents\Git\appgw-aseilbssl\certs\wildcard_sabbour_pw.cer" -SSLEndToEnd
+## End-to-End SSL
+# .\Add-WebAppToAppGw.ps1
+# -ResourceGroupName "rgname"
+# -ApplicationGatewayName "appgw-name"
+# -BackendPoolName "ase_pool"
+# -BackendIPAddress "172.16.3.9"
+# -BackendFQDN "webapp1.internal.domain.com"
+# -WebappName "webapp1"
+# -FrontendHost "webapp1endtoend"
+# -FrontendRootZoneName "domain.com"
+# -FrontendSSLCertificateName "domain.com-frontend-sslcertificate"
+# -FrontendSSLCertificatePath "path\to\wildcard_domain_com.pfx"
+# -BackendAuthenticationCertificateName "ase-ilb-public-certificate"
+# -SSLEndToEnd
 
-# SSL Termination
-# .\Add-WebAppToAppGw.ps1 -ResourceGroupName "appgw-aseilbssl3" -ApplicationGatewayName "appgw" -BackendPoolName "ase_pool" -BackendIPAddress "172.16.3.9" -BackendFQDN "webapp1.internal.sabbour.pw" -WebappName "webapp1" -FrontendHost "ssloffload" -FrontendRootZoneName "sabbour.pw" -FrontendSSLCertificateName "wildcard-frontend-sslcertificate" -SSLTermination
+## SSL Termination
+# .\Add-WebAppToAppGw.ps1
+# -ResourceGroupName "rgname"
+# -ApplicationGatewayName "appgw-name"
+# -BackendPoolName "ase_pool"
+# -BackendIPAddress "172.16.3.9"
+# -BackendFQDN "webapp1.internal.domain.com"
+# -WebappName "webapp1"
+# -FrontendHost "webapp1ssloffload"
+# -FrontendRootZoneName "domain.com"
+# -FrontendSSLCertificateName "domain.com-frontend-sslcertificate"
+# -FrontendSSLCertificatePath "path\to\wildcard_domain_com.pfx"
+# -SSLTermination
+
+## HTTP Only
+# .\Add-WebAppToAppGw.ps1
+# -ResourceGroupName "rgname"
+# -ApplicationGatewayName "appgw-name"
+# -BackendPoolName "ase_pool"
+# -BackendIPAddress "172.16.3.9"
+# -BackendFQDN "webapp1.internal.domain.com"
+# -WebappName "webapp1"
+# -FrontendHost "webapp1nossl"
+# -FrontendRootZoneName "domain.com"
 
 Param(
     [Parameter(Mandatory = $true)][string] $ResourceGroupName,
@@ -14,8 +48,8 @@ Param(
     [Parameter(Mandatory = $true)][string] $FrontendHost,
     [Parameter(Mandatory = $true)][string] $FrontendRootZoneName,
     [Parameter(Mandatory = $false)][string] $FrontendSSLCertificateName,
-    [Parameter(Mandatory = $false)][string] $BackendSSLCertificateThumbprint,
-    [Parameter(Mandatory = $false)] $BackendWhitelistSSLCertificateFile,
+    [Parameter(Mandatory = $false)][string] $FrontendSSLCertificatePath,
+    [Parameter(Mandatory = $false)][string] $BackendAuthenticationCertificateName,
     [switch] $SSLOnly,
     [switch] $SSLEndToEnd,
     [switch] $SSLTermination,
@@ -155,14 +189,14 @@ if(!$SSLOnly) {
     }
     
     # Get probes for backend
-    $probeHttp = $appgw.Probes | Where-Object {$backendHttpProbeName}
+    $probeHttp = $appgw.Probes | Where-Object {$_.Name -eq $backendHttpProbeName}
 
     # If HTTP probe doesn't exist and we didn't pass the SSL only switch, create it
     Write-Host -foregroundcolor Yellow "`tChecking if HTTP Probe exists for backend FQDN '$BackendFQDN'."
     if(!$probeHttp) {
         Write-Host -foregroundcolor Cyan "`t`tNo HTTP Probe exists for '$BackendFQDN'. Creating it."        
         $appgw = Add-AzureRmApplicationGatewayProbeConfig -ApplicationGateway $appgw -Name $backendHttpProbeName -Protocol Http -HostName $BackendFQDN -Path "/" -Interval 30 -Timeout 120 -UnhealthyThreshold 8
-		$probeHttp = $appgw.Probes | Where-Object {$backendHttpProbeName}
+		$probeHttp = $appgw.Probes | Where-Object {$_.Name -eq $backendHttpProbeName}
     }
     else {
         Write-Host -foregroundcolor Green "`t`tHTTP Probe exists for '$BackendFQDN'."  
@@ -208,9 +242,22 @@ if($SSLEndToEnd -or $SSLTermination) {
     if(!$listenerHttps) {
         Write-Host -foregroundcolor Cyan "`t`tNo HTTPS Listener exists for '$FrontendFQDN'. Creating it with SSL certificate named '$FrontendSSLCertificateName'"        
         $cert = $appgw.SslCertificates | Where-Object {$_.Name -eq $FrontendSSLCertificateName}
+		Write-Host -foregroundcolor Yellow "`tChecking if SSL Certificate '$FrontendSSLCertificateName' exists."
+		if(!$cert) {			
+            Write-Host -foregroundcolor Green "`tCreating SSL Certificate. Will prompt you for password now."
+			$SecurePassword = Read-Host -AsSecureString  "Enter certificate password:"
+			$BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($SecurePassword)
+			$certificatePassword = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR) 
+			$appgw = Add-AzureRmApplicationGatewaySslCertificate -ApplicationGateway $appgw -Name $FrontendSSLCertificateName -CertificateFile $FrontendSSLCertificatePath -Password $certificatePassword
+			$cert = $appgw.SslCertificates | Where-Object {$_.Name -eq $FrontendSSLCertificateName}
+		}
+		else {
+			Write-Host -foregroundcolor Green "`t`tSSL Certificate exists." 		
+		}
+
         $fpHttps = $appgw.FrontendPorts| Where-Object {$_.Port -eq 443}
         if(!$fpHttps) {
-            Write-Host -foregroundcolor Green "`tCreating Frontend Port 443" 
+            Write-Host -foregroundcolor Cyan "`tCreating Frontend Port 443" 
             $appgw = Add-AzureRmApplicationGatewayFrontendPort -ApplicationGateway $appgw -Name $frontendPortHttpsName  -Port 443
             $fpHttps = $appgw.FrontendPorts| Where-Object {$_.Name -eq $frontendPortHttpsName}
         }
@@ -239,20 +286,12 @@ if($SSLEndToEnd -or $SSLTermination) {
             Write-Host -foregroundcolor Green "`t`t`tHTTPS Probe exists for '$BackendFQDN'."  
         }
 
-        Write-Host -foregroundcolor Yellow "`t`tEnd-to-End SSL was requested. Will check if the backend authentication certificate exists, otherwise will create it."
-
-        # Load the backend authentication certificate from disk (use the command below to parse it into a comparable object)
-        $authcert = New-AzureRmApplicationGatewayAuthenticationCertificate -Name "ase-ilb-sslcertificate" -CertificateFile $BackendWhitelistSSLCertificateFile
-        if(!$authcert) {
-            Write-Host -foregroundcolor Red "Invalid state: End to end SSL requested but unable to load Backend Authentication Certificate from path '$BackendWhitelistSSLCertificateFile'. Did you miss to pass the -BackendWhitelistSSLCertificateFile parameter?"
-            Exit 1
-        }
-
+        Write-Host -foregroundcolor Yellow "`t`tEnd-to-End SSL was requested. Will check if the backend authentication certificate '$BackendAuthenticationCertificateName' exists."
         # Try and find a matching certificate on the Application Gateway
-        $backendAuthCertificate = $appgw.AuthenticationCertificates | Where-Object { $_.Data -eq $authcert.Data }
+        $backendAuthCertificate = $appgw.AuthenticationCertificates | Where-Object { $_.Name -eq $BackendAuthenticationCertificateName }
         if(!$backendAuthCertificate) {
-            Write-Host -foregroundcolor Cyan "`t`t`tBackend Authentication Certificate doesn't exist. Creating it."
-            $appgw = Add-AzureRmApplicationGatewayAuthenticationCertificate -ApplicationGateway $appgw -Name "ase-ilb-sslcertificate" -CertificateFile $BackendWhitelistSSLCertificateFile
+			Write-Host -foregroundcolor Red "Invalid state: End to end SSL requested but unable to load Backend Authentication Certificate named from path '$BackendAuthenticationCertificateName'. Make sure a certificate of this name exists in the Application Gateway."
+			Exit 1
         }
         else {        
             Write-Host -foregroundcolor Green "`t`t`tBackend Authentication Certificate exists."  
@@ -337,8 +376,6 @@ if(!$frontendFQDNIsEnabled) {
     Write-Host -foregroundcolor Cyan "`tAdding '$FrontendFQDN' to HostNames"            
     $webapp.HostNames.Add($FrontendFQDN)
     $webapp = Set-AzureRmWebApp -ResourceGroupName $ResourceGroupName -Name $WebappName -HostNames $webapp.HostNames
-    Write-Host -foregroundcolor Cyan "`tConfiguring SSL Binding for '$FrontendFQDN'" 
-	New-AzureRmWebAppSSLBinding -ResourceGroupName $ResourceGroupName -WebAppName $WebappName -Thumbprint $BackendSSLCertificateThumbprint -Name $FrontendFQDN
 }
 else {
     Write-Host -foregroundcolor Green "`tHostname already enabled."  
@@ -360,10 +397,12 @@ if($SSLEndToEnd) {
 # Set DNS A records pointing the FQDN to the Frontend IP of the Application Gateway, only if the NoDNS flag is not passed
 if(!$NoDNS) {
 	Write-Host -foregroundcolor Yellow "`nChecking if there is an A Record for '$FrontendHost' in zone '$FrontendRootZoneName'"
-	$aRecord = Get-AzureRmDnsRecordSet -ResourceGroupName $ResourceGroupName -RecordType A -Name $FrontendHost -ZoneName $FrontendRootZoneName
+	$zoneRecord = Get-AzureRmDnsRecordSet -ResourceGroupName $ResourceGroupName -ZoneName $FrontendRootZoneName -RecordType A
+	$aRecord = $zoneRecord | Where-Object {$_.Name -eq $FrontendHost}
 	if(!$aRecord) {
 		Write-Host -foregroundcolor Cyan "`tSetting DNS A Record for '$FrontendHost' in zone '$FrontendRootZoneName'"  
-		New-AzureRmDnsRecordSet -Name $FrontendHost -RecordType A -ZoneName $FrontendRootZoneName -ResourceGroupName $ResourceGroupName -Ttl 3600 -DnsRecords (New-AzureRmDnsRecordConfig -IPv4Address $appgwPublicIp.IpAddress)
+		$appgwPublicIp = Get-AzureRmPublicIpAddress -ResourceGroupName $ResourceGroupName | Where-Object {$_.Id -eq $appgw.FrontendIPConfigurations.PublicIpAddress.Id}
+		$aRecord = New-AzureRmDnsRecordSet -Name $FrontendHost -RecordType A -ZoneName $FrontendRootZoneName -ResourceGroupName $ResourceGroupName -Ttl 3600 -DnsRecords (New-AzureRmDnsRecordConfig -IPv4Address $appgwPublicIp.IpAddress)
 	}
 	else {
 		Write-Host -foregroundcolor Green "`tA Record already exists."  

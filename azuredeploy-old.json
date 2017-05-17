@@ -201,11 +201,10 @@
     "appgwSkuName": {
       "type": "string",
       "allowedValues": [
-        "Standard_Small",
-        "Standard_Medium",
-        "Standard_Large"
+        "WAF_Medium",
+        "WAF_Large"
       ],
-      "defaultValue": "Standard_Medium",
+      "defaultValue": "WAF_Medium",
       "metadata": {
         "description": "The SKU of the Application Gateway."
       }
@@ -215,6 +214,38 @@
       "defaultValue": 2,
       "metadata": {
         "description": "The number of instances running in the Application Gateway"
+      }
+    },
+    "wafMode": {
+      "type": "string",
+      "allowedValues": [
+        "Detection",
+        "Prevention"
+      ],
+      "defaultValue": "Detection",
+      "metadata": {
+        "description": "WAF Mode"
+      }
+    },
+    "wafRuleSetType": {
+      "type": "string",
+      "allowedValues": [
+        "OWASP"
+      ],
+      "defaultValue": "OWASP",
+      "metadata": {
+        "description": "WAF Rule Set Type"
+      }
+    },
+    "wafRuleSetVersion": {
+      "type": "string",
+      "allowedValues": [
+        "2.2.9",
+        "3.0"
+      ],
+      "defaultValue": "3.0",
+      "metadata": {
+        "description": "WAF Rule Set Version"
       }
     },
 
@@ -368,8 +399,15 @@
       "properties": {
         "sku": {
           "name": "[parameters('appgwSkuName')]",
-          "tier": "Standard",
+          "tier": "WAF",
           "capacity": "[parameters('appgwCapacity')]"
+        },
+        "webApplicationFirewallConfiguration": {
+          "enabled": "true",
+          "firewallMode": "[parameters('wafMode')]",
+          "ruleSetType": "[parameters('wafRuleSetType')]",
+          "ruleSetVersion": "[parameters('wafRuleSetVersion')]",
+          "disabledRuleGroups": []
         },
         "gatewayIPConfigurations": [
           {
@@ -397,7 +435,7 @@
         ],
         "sslCertificates": [
           {
-            "name": "sslcertificate",
+            "name": "wildcard-frontend-sslcertificate",
             "properties": {
               "data": "[parameters('pfxBase64')]",
               "password": "[parameters('pfxPassword')]"
@@ -502,7 +540,7 @@
               "Protocol": "Https",
               "hostName": "[parameters('externalAppHostname')]",
               "SslCertificate": {
-                "Id": "[concat(variables('applicationGatewayRef'), '/sslCertificates/sslcertificate')]"
+                "Id": "[concat(variables('applicationGatewayRef'), '/sslCertificates/wildcard-frontend-sslcertificate')]"
               },
               "RequireServerNameIndication": "true"
             }
@@ -563,9 +601,9 @@
         "displayName": "App Service Environment"
       },
       "dependsOn": [
-        "[concat('Microsoft.Network/virtualNetworks/', variables('vnetName'))]",
-        "[concat('Microsoft.Compute/virtualMachines/', variables('bindVMName'))]",
-        "[concat('Microsoft.Compute/virtualMachines/', variables('bindVMName'), '/extensions/SetupBindCustomScript')]"
+        "[concat('Microsoft.Network/virtualNetworks/', variables('vnetName'))]"
+        /*"[concat('Microsoft.Compute/virtualMachines/', variables('bindVMName'))]",
+        "[concat('Microsoft.Compute/virtualMachines/', variables('bindVMName'), '/extensions/bind-customscript')]"*/
       ],
       "properties": {
         "name": "[parameters('aseName')]",
@@ -684,6 +722,7 @@
         }
       }
     },
+
     {
       "type": "Microsoft.Network/dnszones",
       "name": "[parameters('rootZoneName')]",
@@ -714,7 +753,7 @@
         "[resourceId('Microsoft.Network/publicIPAddresses', variables('appgwPublicIpName'))]",
         "[resourceId('Microsoft.Network/applicationGateways',variables('appgwName'))]"
       ]
-    },
+    },/*
     {
       "name": "[variables('bindVMName')]",
       "type": "Microsoft.Compute/virtualMachines",
@@ -761,7 +800,7 @@
       },
       "resources": [
         {
-          "name": "SetupBindCustomScript",
+          "name": "bind-customscript",
           "type": "extensions",
           "location": "[resourceGroup().location]",
           "apiVersion": "2016-03-30",
@@ -769,7 +808,7 @@
             "[resourceId('Microsoft.Compute/virtualMachines', variables('bindVMName'))]"
           ],
           "tags": {
-            "displayName": "SetupBindCustomScript"
+            "displayName": "bind-customscript"
           },
           "properties": {
             "publisher": "Microsoft.OSTCExtensions",
@@ -790,7 +829,7 @@
           }
         }
       ]
-    },
+    },*/
 
     {
       "type": "Microsoft.Network/networkSecurityGroups",

@@ -49,11 +49,9 @@
         "description": "WAF Rule Set Version"
       }
     },
-    "appgwPfxBase64": {
+
+    "backendCerBase64": {
       "type": "string"
-    },
-    "appgwPfxPassword": {
-      "type": "securestring"
     }
   },
   "variables": {
@@ -124,12 +122,11 @@
             }
           }
         ],
-        "sslCertificates": [
+        "authenticationCertificates": [
           {
-            "name": "wildcard-frontend-sslcertificate",
+            "name": "ase-ilb-public-certificate",
             "properties": {
-              "data": "[parameters('appgwPfxBase64')]",
-              "password": "[parameters('appgwPfxPassword')]"
+              "data": "[parameters('backendCerBase64')]"
             }
           }
         ],
