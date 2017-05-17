@@ -1,4 +1,7 @@
 # App Service Environment with an Internal Load Balancer and End-to-End SSL behind an Application Gateway
+This template deploys an **App Service Environment + Application Gateway with End-to-End SSL** enabled with Web Application Firewall.
+
+`Tags: Application Gateway, App Service Environment, Web Application Firewall, Web Apps`
 
 ## Deploy initial infrastructure
 <a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fsabbour%2Fappgw-aseilbssl%2Fmaster%2Fazuredeploy.json" target="_blank">
@@ -10,9 +13,7 @@
 <img src="https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.png"/>
 </a>
 
-This template deploys an **App Service Environment + Application Gateway with End-to-End SSL**.
 
-`Tags: Application Gateway, App Service Environment, Web Application Firewall, Web Apps`
 
 ## Solution overview and deployed resources
 
