@@ -81,8 +81,12 @@ You'll only need to do this for the Internal Load Balancer certificate.
 
 ## Connecting to your App Service Environment
 + Once the environment is ready and the DNS propagates, open http://yourappname.domain.com and https://yourappname.domain.com, both should work and the latter should be using End-to-End SSL. Note that the **REMOTE_ADDR** is actually the IP of the Application Gateway.
-![End to End SSL](images/endtoend.png)
-![SSL Offloading](images/ssloffload.png)
+
++ End to End SSL:
+	+ ![End to End SSL](images/endtoend.png)
+
++ SSL Offloading:
+	+ ![SSL Offloading](images/ssloffload.png)
 
 + To access the Kudu console or FTP, they should be at the following endpoints. The FTP username/password are your Azure Subscription's deployment credentials. The username would be **yourappname\deploymentusername**
    + Kudu: **yourappname.scm.internal.domain.com**
