@@ -62,8 +62,8 @@ $frontendPortHttpName = "appgw-frontendPort-http"
 $frontendPortHttpsName = "appgw-frontendPort-https"
 $fqdnListnerHttpName = "${FrontendFQDN}-listener-http"
 $fqdnListnerHttpsName = "${FrontendFQDN}-listener-https"
-$backendHttpProbeName = "${FrontendFQDN}-${BackendFQDN}-probe-http"
-$backendHttpsProbeName = "${FrontendFQDN}-${BackendFQDN}-probe-https"
+$backendHttpProbeName = "${BackendFQDN}-probe-http"
+$backendHttpsProbeName = "${BackendFQDN}-probe-https"
 $backendHttpSettingName = "${FrontendFQDN}-${BackendFQDN}-backendsetting-http"
 $backendHttpsSettingName = "${FrontendFQDN}-${BackendFQDN}-backendsetting-https"
 $backendHttpRuleName = "${FrontendFQDN}-${BackendFQDN}-rule-http"
@@ -304,7 +304,7 @@ if($SSLEndToEnd -or $SSLTermination) {
         Write-Host -foregroundcolor Yellow "`t`tChecking if HTTPS Backend Setting exists for the created probe."
         if(!$backendSettingHttps) {
             Write-Host -foregroundcolor Cyan "`t`t`tNo HTTPS Backend Setting exists for HTTP probe. Creating End-to-End SSL setting."        
-            $appgw = Add-AzureRmApplicationGatewayBackendHttpSettings -ApplicationGateway $appgw -Name $backendHttpsSettingName -Port 443 -AuthenticationCertificates $authcert -Protocol Https -CookieBasedAffinity Disabled -Probe $probeHttps -RequestTimeout 30
+            $appgw = Add-AzureRmApplicationGatewayBackendHttpSettings -ApplicationGateway $appgw -Name $backendHttpsSettingName -Port 443 -AuthenticationCertificates $backendAuthCertificate -Protocol Https -CookieBasedAffinity Disabled -Probe $probeHttps -RequestTimeout 30
             $backendSettingHttps = $appgw.BackendHttpSettingsCollection| Where-Object {$_.Name -eq $backendHttpsSettingName}
         }
         else {        
@@ -381,19 +381,6 @@ else {
     Write-Host -foregroundcolor Green "`tHostname already enabled."  
 }
 
-# Make sure that the web app has the SSL Binding for the domain, in case we're using End-to-End SSL
-if($SSLEndToEnd) {
-	Write-Host -foregroundcolor Yellow "`nMaking sure the Azure Web App has an SSL Binding for '$FrontendFQDN'.."
-	$sslBinding = Get-AzureRmWebAppSSLBinding -ResourceGroupName $ResourceGroupName -WebappName $WebappName -Name $FrontendFQDN
-	if(!$sslBinding) {
-		Write-Host -foregroundcolor Cyan "`tConfiguring SSL Binding for '$FrontendFQDN'"        
-		$sslBinding = New-AzureRmWebAppSSLBinding -ResourceGroupName $ResourceGroupName -WebAppName $WebappName -Thumbprint $BackendSSLCertificateThumbprint -Name $FrontendFQDN
-	}
-	else {
-		Write-Host -foregroundcolor Green "`tSSL Binding already exists."  
-	}
-}
-
 # Set DNS A records pointing the FQDN to the Frontend IP of the Application Gateway, only if the NoDNS flag is not passed
 if(!$NoDNS) {
 	Write-Host -foregroundcolor Yellow "`nChecking if there is an A Record for '$FrontendHost' in zone '$FrontendRootZoneName'"
@@ -405,7 +392,7 @@ if(!$NoDNS) {
 		$aRecord = New-AzureRmDnsRecordSet -Name $FrontendHost -RecordType A -ZoneName $FrontendRootZoneName -ResourceGroupName $ResourceGroupName -Ttl 3600 -DnsRecords (New-AzureRmDnsRecordConfig -IPv4Address $appgwPublicIp.IpAddress)
 	}
 	else {
-		Write-Host -foregroundcolor Green "`tA Record already exists."  
+		Write-Host -foregroundcolor Green "`tA Record already exists."
 	}
 }
 
