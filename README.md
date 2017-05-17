@@ -1,10 +1,13 @@
 # App Service Environment with an Internal Load Balancer and End-to-End SSL behind an Application Gateway
 
+## Deploy initial infrastructure
 <a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fsabbour%2Fappgw-aseilbssl%2Fmaster%2Fazuredeploy.json" target="_blank">
 <img src="https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.png"/>
 </a>
-<a href="http://armviz.io/#/?load=https%3A%2F%2Fraw.githubusercontent.com%2Fsabbour%2Fappgw-aseilbssl%2Fmaster%2Fazuredeploy.json" target="_blank">
-<img src="https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/visualizebutton.png"/>
+
+## Deploy additional Web App
+<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fsabbour%2Fappgw-aseilbssl%2Fmaster%2Fazuredeploy-webapp.json" target="_blank">
+<img src="https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.png"/>
 </a>
 
 This template deploys an **App Service Environment + Application Gateway with End-to-End SSL**.
@@ -32,6 +35,7 @@ You'll only need to do this for the Internal Load Balancer certificate.
 + You can click the "Deploy to Azure" button at the beginning of this document.
 + Supply the correct parameters for the certificates
 + This will take about 2-hours to deploy
++ Run the **Add-WebAppToAppGw.ps1**  PowerShell script to finish the process.
 
 ![Custom Deployment](images/customtemplate.png)
 

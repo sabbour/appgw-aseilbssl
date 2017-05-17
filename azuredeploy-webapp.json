@@ -2,7 +2,6 @@
   "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-
     "appPlanName": {
       "type": "string",
       "metadata": {
@@ -15,11 +14,10 @@
         "description": "The name of the app to be deployed. This will be prepended to the App Service Environment subdomain to create the app's hostname."
       }
     },
-    "externalAppHostname": {
+    "aseDNSSuffix": {
       "type": "string",
-      "defaultValue": "webapp1.domain.com",
       "metadata": {
-        "description": "The public hostname of the app to be deployed. Make sure that your SSL certificate works for this and that you can manage this domain's DNS."
+        "description": "The App Service Environment subdomain."
       }
     },
     "aseILBCertificateThumbprint": {
@@ -59,8 +57,8 @@
           "aseILBCertificateThumbprint": {
             "value": "[parameters('aseILBCertificateThumbprint')]"
           },
-          "externalAppHostname": {
-            "value": "[parameters('externalAppHostname')]"
+          "aseDNSSuffix": {
+            "value": "[parameters('aseDNSSuffix')]"
           }
         }
       }

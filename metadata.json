@@ -1,7 +1,7 @@
 {
-  "itemDisplayName": "ASE (ILB) + SSL with Application Gateway",
+  "itemDisplayName": "ASE (ILB) + SSL with Application Gateway with WAF enabled",
   "description": "App Service Environment with an Internal Load Balancer and End-to-End SSL behind an Application Gateway",
   "summary": "App Service Environment with an Internal Load Balancer and End-to-End SSL behind an Application Gateway",
   "githubUsername": "sabbour",
-  "dateUpdated": "2017-05-07"
+  "dateUpdated": "2017-05-17"
 }
