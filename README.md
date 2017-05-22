@@ -28,7 +28,7 @@ Before you deploy the template, you need to have your 2 SSL certificates around.
 2. **Back-end SSL certificate:** This is the certificate that will be used on the Internal Load Balancer. Your "internal" users will see this. At minimum it should have **Subject=\*.internal.domain.com and SAN=\*.scm.internal.domain.com** where **internal.domain.com** is your App Service Environment DNS suffix. It doesn't have to be from a root CA but it is recommended, otherwise users will see an SSL warning if they browse to the internal hostnames.
 
 
-You can use the PowerShell scripts **Get-Base64FromPFX.ps1" to read the PFX certificate and convert it into Base64 encoded PFX (with private key) and CER (without private key) as well as spitting out the thumbprint.
+You can use the PowerShell scripts **Get-Base64FromPFX.ps1** to read the PFX certificate and convert it into Base64 encoded PFX (with private key) and CER (without private key) as well as spitting out the thumbprint.
 You'll only need to do this for the Internal Load Balancer certificate.
 
 ## Deployment steps
@@ -78,6 +78,9 @@ You'll only need to do this for the Internal Load Balancer certificate.
  -FrontendSSLCertificatePath "path\to\wildcard_domain_com.pfx"
  -SSLTermination
 ```
+
+### Adding additional apps/domains to the environment
+Every time you need to connect a Web App to the Application Gateway, you can run the **Add-WebAppToAppGw.ps1** PowerShell script to complete the configuration,
 
 ## Connecting to your App Service Environment
 + Once the environment is ready and the DNS propagates, open http://yourappname.domain.com and https://yourappname.domain.com, both should work and the latter should be using End-to-End SSL. Note that the **REMOTE_ADDR** is actually the IP of the Application Gateway.
