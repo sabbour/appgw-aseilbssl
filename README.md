@@ -1,4 +1,4 @@
-# App Service Environment with an Internal Load Balancer and End-to-End SSL behind an Application Gateway
+\# App Service Environment with an Internal Load Balancer and End-to-End SSL behind an Application Gateway
 This template deploys an **App Service Environment + Application Gateway with End-to-End SSL** enabled with Web Application Firewall.
 
 `Tags: Application Gateway, App Service Environment, Web Application Firewall, Web Apps`
@@ -24,8 +24,8 @@ Note that this template assumes you will use Azure DNS to host your DNS. If you 
 ## Prerequisites
 
 Before you deploy the template, you need to have your 2 SSL certificates around.
-1. **Front-end SSL certificate:** This is the certificate that your end users will see in their browser. At minimum it should have ** Subject= *.domain.com **
-2. **Back-end SSL certificate:** This is the certificate that will be used on the Internal Load Balancer. Your "internal" users will see this. At minimum it should have ** Subject= *.internal.domain.com and SAN= *.scm.internal.domain.com ** where **internal.domain.com** is your App Service Environment DNS suffix. It doesn't have to be from a root CA but it is recommended, otherwise users will see an SSL warning if they browse to the internal hostnames.
+1. **Front-end SSL certificate:** This is the certificate that your end users will see in their browser. At minimum it should have **Subject= \*.domain.com**
+2. **Back-end SSL certificate:** This is the certificate that will be used on the Internal Load Balancer. Your "internal" users will see this. At minimum it should have **Subject=\*.internal.domain.com and SAN=\*.scm.internal.domain.com** where **internal.domain.com** is your App Service Environment DNS suffix. It doesn't have to be from a root CA but it is recommended, otherwise users will see an SSL warning if they browse to the internal hostnames.
 
 
 You can use the PowerShell scripts **Get-Base64FromPFX.ps1" to read the PFX certificate and convert it into Base64 encoded PFX (with private key) and CER (without private key) as well as spitting out the thumbprint.
