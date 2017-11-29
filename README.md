@@ -1,4 +1,5 @@
-\# App Service Environment with an Internal Load Balancer and End-to-End SSL behind an Application Gateway
+# App Service Environment with an Internal Load Balancer and End-to-End SSL behind an Application Gateway
+
 This template deploys an **App Service Environment + Application Gateway with End-to-End SSL** enabled with Web Application Firewall.
 
 `Tags: Application Gateway, App Service Environment, Web Application Firewall, Web Apps`
